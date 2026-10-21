@@ -92,6 +92,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--r); padding: 10px 14px; margin-bottom: 18px; font-size: 14px;
 }
 
+/* ---------- 更新內容 ---------- */
+.news-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--seal); display: inline-block; }
+.news { background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r); margin-bottom: 18px; overflow: hidden; }
+.news-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px; background: var(--accent-soft); }
+.news-h h2 { margin: 0; font: 700 18px/1.3 var(--font-display); }
+.news-b { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 20px; padding: 14px 18px 18px; }
+@media (max-width: 760px) { .news-b { grid-template-columns: minmax(0, 1fr); } }
+.news h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 500; letter-spacing: .08em; }
+.feat { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 14px; }
+.log { margin-bottom: 12px; }
+.log:last-child { margin-bottom: 0; }
+.log-v { font-weight: 700; font-size: 14px; }
+.log-v .num { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 8px; }
+.log ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 13.5px; }
+.log li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+.kind { font-size: 11.5px; border-radius: 4px; padding: 0 6px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.kind.new { border-color: var(--accent); color: var(--accent); }
+.log.old { opacity: .75; }
+
 /* ---------- layout ---------- */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
 @media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
@@ -192,6 +211,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .plan-foot { display: flex; justify-content: space-between; border-top: 1px dashed var(--line); padding-top: 7px; font-size: 13px; }
 .plan-foot .money { font-weight: 600; }
 .plan-foot .half { color: var(--muted); }
+.plan-alloc { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+.plan-alloc .money { font-size: 16px; color: var(--accent); }
 
 /* ---------- ticket ---------- */
 .ticket {
@@ -226,6 +247,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .warn.info { color: var(--muted); }
 .t-actions { display: flex; gap: 8px; padding: 14px 20px 18px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .t-actions .btn.primary { flex: 1; justify-content: center; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
 
 .foot { margin-top: 28px; color: var(--muted); font-size: 12.5px; display: grid; gap: 4px; }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 8px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
@@ -243,6 +265,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .rp { color: #000; font-family: var(--font-body); font-size: 9.6pt; line-height: 1.45; }
 .rp.dense { font-size: 8.6pt; line-height: 1.32; }
+.rp + .rp { break-before: page; }
 .rp-h { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2.2pt solid #000; padding-bottom: 2mm; }
 .rp-h h1 { margin: 0; font: 900 18pt/1.2 var(--font-display); letter-spacing: .12em; }
 .rp-h .meta { text-align: right; font-size: 8.5pt; }
@@ -281,6 +304,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       <p>法院或行政執行分署囑託之現況測量、非屬建物位置面積測量與共有物分割方案。依《土地複丈費及建築改良物測量費收費標準》第 4 條、附表一、附表二，及 114 年 11 月 4 日非屬建物收費內規計算。</p>
     </div>
     <div class="tools">
+      <button class="btn ghost" id="btnNews" type="button">更新內容<span class="news-dot" id="newsDot" hidden></span></button>
       <button class="btn ghost" id="btnSample" type="button">載入範例</button>
       <button class="btn ghost danger" id="btnClear" type="button">全部清除</button>
       <button class="btn ghost" id="btnExport" type="button" data-top-only>匯出檔案</button>
@@ -292,6 +316,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
     <span>目前顯示的是<b>範例數字</b>，不是任何真實案件。</span>
     <button class="btn small" type="button" id="btnStartBlank">清空，開始填寫</button>
   </div>
+
+  <section class="news" id="news" hidden aria-labelledby="newsTitle">
+    <div class="news-h"><h2 id="newsTitle"></h2><button class="btn small" type="button" id="btnNewsClose">知道了</button></div>
+    <div class="news-b">
+      <div><h3>目前版本特點</h3><ul class="feat" id="featList"></ul></div>
+      <div><h3>更新紀錄</h3><div id="logList"></div></div>
+    </div>
+  </section>
 
   <div class="layout">
   <form class="form" id="form" autocomplete="off" onsubmit="return false">
@@ -320,21 +352,21 @@ button, input, select, textarea { font: inherit; color: inherit; }
       <div class="sec-h"><h2>建物部分</h2><span class="basis">第 4 條第 1 項第 2、3 款 · 附表二項次一</span><span class="sum money" id="s_bld">0</span></div>
       <div class="sec-b">
         <div class="sub">
-          <h3>位置費 <small>建物位置圖測量費，每單位 4,000 元</small></h3>
+          <h3>位置費 <small>建物位置圖測量費，每棟 4,000 元；同一棟有多個閉合區時，每個閉合區另計</small></h3>
           <div class="count-row">
-            <span class="lbl">建物棟數</span>
+            <span class="lbl">建物棟數／閉合區數</span>
             <span class="stepper"><button type="button" data-step="-1" data-for="b_pos" aria-label="減一">−</button><input type="number" id="b_pos" min="0" step="1" inputmode="numeric" data-bind="bld.pos"><button type="button" data-step="1" data-for="b_pos" aria-label="加一">+</button></span>
-            <span class="unit">棟</span>
+            <span class="unit">棟（區）</span>
             <span class="calc-chip" id="c_bpos"></span>
-            <span class="note">附表二以「整棟建物」為單位。原試算表寫「一個閉合區為一格」，同一棟若有多個閉合區請只算一棟。</span>
+            <span class="note">填「棟數＋額外閉合區數」。例：一棟主建物另有一處分離的增建，填 2。</span>
           </div>
         </div>
         <div class="sub">
-          <h3>面積費 <small>建物平面圖測量費，每建號每層每 50 ㎡ 為一單位，不足 50 ㎡ 以 50 ㎡ 計，每單位 1,000 元</small></h3>
+          <h3>面積費 <small>建物平面圖測量費，每層每閉合區分別計算，每 50 ㎡ 為一單位，不足 50 ㎡ 以 50 ㎡ 計，每單位 1,000 元</small></h3>
           <div class="fold" id="fold_bld">
-            <div class="fold-h"><span>各建號／各層面積</span><span class="sum-tag" id="t_bld"></span></div>
+            <div class="fold-h"><span>各層／各閉合區面積</span><span class="sum-tag" id="t_bld"></span></div>
             <div class="fold-b">
-              <div class="row-head bld"><span>建號／層別／閉合區</span><span>面積（㎡）</span><span style="text-align:right">單位數</span><span></span></div>
+              <div class="row-head bld"><span>層別／閉合區</span><span>面積（㎡）</span><span style="text-align:right">單位數</span><span></span></div>
               <div class="rows" id="list_bld"></div>
               <button type="button" class="btn small add" data-add="bld">＋ 新增一層／一區</button>
             </div>
@@ -434,6 +466,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
           <div class="plans" id="plans"></div>
           <p class="hint">「判決確定後」為參考金額：依第 6 條，判決確定後依已核定成果申請複丈、無需實地測量者，按（基本費 ＋ 該案施測費）半數計收。不列入本次合計。</p>
         </div>
+
+        <div class="sub" id="allocSub">
+          <h3>各方案分算 <small>列印「各方案分算明細」時使用，每案一張 A4，各張加總等於應收合計</small></h3>
+          <div class="grid-3">
+            <div class="field"><label for="a_base">基本費由哪一案收取</label><select class="in" id="a_base" data-bind="split.basePlan"></select></div>
+            <div class="field"><label for="a_common">共同費用（建物、非屬建物、製圖費）</label>
+              <select class="in" id="a_common" data-bind="split.commonMode">
+                <option value="withBase">併入收取基本費的方案</option>
+                <option value="separate">另列一張「共同費用」明細</option>
+              </select></div>
+          </div>
+          <p class="hint">非屬建物展示在多個方案時，其基本費也由同一案收取，施測費由前幾個方案各收一次。</p>
+        </div>
       </div>
     </section>
   </form>
@@ -449,7 +494,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
     <div class="t-body" id="tbody"></div>
     <div class="warns" id="warns"></div>
     <div class="t-actions">
-      <button class="btn primary" id="btnPrint" type="button" data-top-only>列印 A4 報表</button>
+      <button class="btn primary" id="btnPrint" type="button" data-top-only>列印 A4 總表</button>
+      <button class="btn" id="btnPrintPlans" type="button" data-top-only>列印各方案分算明細</button>
       <button class="btn" id="btnCopy" type="button">複製明細</button>
     </div>
   </aside>
@@ -469,7 +515,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 'use strict';
 /* ===== 費率（法規修正時只改這裡） ===== */
 const RATES = {
-  bldPos: 4000,                     // 附表二項次一 建物位置圖測量費／棟
+  bldPos: 4000,                     // 附表二項次一 建物位置圖測量費／棟（閉合區）
   bldAreaUnit: 1000,                // 附表二項次一 建物平面圖測量費／單位
   bldAreaSize: 50,                  // 每 50 ㎡ 一單位
   nbBase: [2500, 3000, 3500, 4000], // 附表一項次一 基本費（依面積級距）
@@ -485,7 +531,34 @@ const RATES = {
 const TIERS = ['未滿 200 ㎡', '200 以上未滿 1,000 ㎡', '1,000 以上未滿 10,000 ㎡', '10,000 ㎡ 以上'];
 const PLAN_NAMES = '甲乙丙丁戊己庚辛壬癸';
 const STORE_KEY = 'survey-fee-calc.v1';
-const VERSION = 'v1.0（2026-10-21）';
+const VERSION = 'v1.1（2026-10-21）';
+/* 更新紀錄：改版時在最上面加一筆，並同步更新 CHANGELOG.md */
+const FEATURES = [
+  '分割方案數量自訂，填幾案就產生幾張方案卡，名稱可改',
+  '邊填邊算，每一項都列出計算式，漏填會跳出提醒',
+  '可印一張 A4 總表，也可印各方案分算明細（每案一張）',
+  '多項方案基本費只收一次，預設由第一案收取，可改',
+  '每個區塊標明法規依據，費率集中在 RATES 一處修改',
+  '資料自動保存，可匯出、匯入 .json 交接案件',
+];
+const CHANGELOG = [
+  { ver: 'v1.1', date: '2026-10-21', items: [
+    ['新增', '「列印各方案分算明細」：每個分割方案各印一張 A4，各張加總等於總表合計。'],
+    ['新增', '分算設定：基本費由哪一案收取（預設第一案）；共同費用可併入該案或另列一張。'],
+    ['調整', '建物位置費改以「棟數／閉合區數」計，同一棟有多個閉合區時每區另計。'],
+    ['調整', '建物面積費改為每層每閉合區分算，不再強調建號。'],
+    ['新增', '更新內容面板與版本標示。'],
+  ] },
+  { ver: 'v1.0', date: '2026-10-21', items: [
+    ['新增', '取代 Excel 試算表 v2.1，甲乙丙三案改為自訂分割方案數量。'],
+    ['調整', '分割方案基本費僅收一次（第 4 條第 1 項第 1 款）。'],
+    ['新增', '非屬建物「展示在幾個方案上」，基本費一次、施測費依方案數計收（內規(三)）。'],
+    ['調整', '非屬建物統一用基本費、施測費、面積費。'],
+    ['調整', '面積級距改下拉選單，填面積自動判斷；需填欄位常駐展開。'],
+    ['新增', '限期 15 日內加倍（製圖費除外）、未埋界標界址點加繳、判決確定後半數參考。'],
+    ['新增', '一張 A4 總表，含新臺幣大寫與簽章欄。'],
+  ] },
+];
 
 /* ===== 純計算 ===== */
 const n = v => { const x = Number(v); return Number.isFinite(x) && x > 0 ? x : 0; };
@@ -552,6 +625,41 @@ function calc(s) {
   };
 }
 
+/* 各方案分算：基本費由指定方案收取，共同費用併入該案或另列 */
+function allocate(c, s) {
+  const P = c.planCount; if (!P) return [];
+  const bi = Math.min(P - 1, int(s.split.basePlan));
+  const it = (cat, name, expr, amt, dbl = true) => ({ cat, name, expr, amt, dbl });
+  const st = c.plans.map(() => []), common = [];
+  if (c.bldPos) common.push(it('建物', '位置費', `${c.bPos} 棟（區） × 4,000`, c.bldPos));
+  if (c.bldArea) common.push(it('建物', '面積費', `${c.uSum} 單位 × 1,000`, c.bldArea));
+  if (c.nbBase) (c.times > 1 ? st[bi] : common).push(it('非屬建物', '基本費（僅收一次）', c.nbT.expr, c.nbBase));
+  if (c.nbSurvey) {
+    const per = c.ptsUnits * RATES.nbSurvey;
+    if (c.times > 1) {
+      const k = Math.min(c.times, P);
+      for (let i = 0; i < k; i++) st[i].push(it('非屬建物', '施測費', `${c.ptsUnits} 單位 × 1,000`, per));
+      if (c.times > k) common.push(it('非屬建物', `施測費（超出分割方案數 ${c.times - k} 案）`, `${c.ptsUnits} 單位 × 1,000 × ${c.times - k}`, per * (c.times - k)));
+    } else common.push(it('非屬建物', '施測費', `${c.ptsUnits} 單位 × 1,000`, c.nbSurvey));
+  }
+  if (c.nbArea) common.push(it('非屬建物', '面積費', `${int(s.nb.areaPoints)} 點 × 200`, c.nbArea));
+  if (c.splitBaseOnce) st[bi].push(it('分割方案', '基本費（僅收一次）', c.pT.expr, c.splitBaseOnce));
+  c.plans.forEach((p, i) => st[i].push(it('分割方案', '施測費', `${p.lines} 線 × 500${p.markers ? ` ＋ ${p.markers} 點 × 200` : ''}`, p.survey)));
+  if (c.draw) common.push(it('雜項', '製圖費', `(${c.sheets} − 1) 張 × 20`, c.draw, false));
+  const sep = s.split.commonMode === 'separate';
+  if (!sep) st[bi].push(...common);
+  const ORDER = ['建物', '非屬建物', '分割方案', '雜項'];
+  const out = st.map((items, i) => ({ title: c.plans[i].name, items, isBase: i === bi }));
+  if (sep && common.length) out.push({ title: '共同費用', items: common, isCommon: true });
+  out.forEach(o => {
+    o.items.sort((a, b) => ORDER.indexOf(a.cat) - ORDER.indexOf(b.cat));
+    const dbl = o.items.reduce((a, x) => a + (x.dbl ? x.amt : 0), 0);
+    o.urgentExtra = s.opt.urgent ? dbl : 0;
+    o.total = o.items.reduce((a, x) => a + x.amt, 0) + o.urgentExtra;
+  });
+  return out;
+}
+
 /* 新臺幣大寫 */
 function toUpper(v) {
   v = Math.round(v);
@@ -580,7 +688,7 @@ function blank() {
     bld: { pos: 0, areas: [] },
     nb: { rows: [], points: 0, areaPoints: 0, plans: 1 },
     draw: { sheets: 0 },
-    split: { count: 0, parcels: [], plans: [] },
+    split: { count: 0, parcels: [], plans: [], basePlan: 0, commonMode: 'withBase' },
   };
 }
 function sample() {
@@ -591,6 +699,7 @@ function sample() {
   s.nb = { rows: [{ id: uid(), label: '果樹區', area: 640, tier: 1, qty: 1 }, { id: uid(), label: '資材棚', area: '', tier: 0, qty: 2 }], points: 12, areaPoints: 6, plans: 1 };
   s.draw = { sheets: 3 };
   s.split = {
+    basePlan: 0, commonMode: 'withBase',
     count: 3,
     parcels: [{ id: uid(), label: '123 地號', area: 856.4, tier: 1, qty: 1 }, { id: uid(), label: '124 地號', area: 1203, tier: 2, qty: 1 }],
     plans: [{ name: '甲案', lines: 6, markers: 0 }, { name: '乙案', lines: 8, markers: 0 }, { name: '丙案', lines: 5, markers: 2 }],
@@ -638,14 +747,14 @@ function tierRow(list, r, i, labelPh) {
 }
 function bldRow(r, i) {
   return `<div class="row bld" data-list="bld" data-i="${i}">
-    <input class="in wide" data-f="label" value="${esc(r.label)}" placeholder="例：建號 101 第 1 層" aria-label="建號／層別">
+    <input class="in wide" data-f="label" value="${esc(r.label)}" placeholder="例：1 層、1 層增建" aria-label="層別／閉合區">
     <input class="in fill" type="number" min="0" step="any" inputmode="decimal" data-f="area" value="${esc(r.area)}" placeholder="面積" aria-label="面積">
     <span class="out" data-out>${bldUnits(r.area)} 單位</span>
     <button type="button" class="x" data-del aria-label="刪除此列">×</button>
   </div>`;
 }
 const LISTS = {
-  bld: { arr: () => S.bld.areas, el: 'list_bld', row: bldRow, make: () => ({ id: uid(), label: '', area: '' }), empty: '尚無資料。每一建號的每一層（或每一個閉合區）新增一列。' },
+  bld: { arr: () => S.bld.areas, el: 'list_bld', row: bldRow, make: () => ({ id: uid(), label: '', area: '' }), empty: '尚無資料。每一層的每一個閉合區新增一列。' },
   nb: { arr: () => S.nb.rows, el: 'list_nb', row: (r, i) => tierRow('nb', r, i, '例：果樹區'), make: () => ({ id: uid(), label: '', area: '', tier: 0, qty: 1 }), empty: '尚無閉合區。' },
   parcel: { arr: () => S.split.parcels, el: 'list_parcel', row: (r, i) => tierRow('parcel', r, i, '例：123 地號'), make: () => ({ id: uid(), label: '', area: '', tier: 0, qty: 1 }), empty: '尚無地號。' },
 };
@@ -661,8 +770,17 @@ function renderPlans() {
       <div class="plan-top"><span class="plan-badge">${esc((p.name || planName(i)).slice(0, 1))}</span><input class="in" data-pf="name" value="${esc(p.name)}" aria-label="方案名稱"></div>
       <label class="pair"><span>線段數</span><input class="in fill" type="number" min="0" step="1" inputmode="numeric" data-pf="lines" value="${esc(p.lines)}"></label>
       <label class="pair"><span>未埋界標界址點</span><input class="in fill" type="number" min="0" step="1" inputmode="numeric" data-pf="markers" value="${esc(p.markers)}"></label>
-      <div class="plan-foot"><span>本案 <b class="money" data-po="sub">0</b></span><span class="half">判決確定後 <span class="money" data-po="half">0</span></span></div>
+      <div class="plan-foot"><span>施測費 <span class="money" data-po="sub">0</span></span><span class="half">判決確定後 <span class="money" data-po="half">0</span></span></div>
+      <div class="plan-alloc"><span>分算應收</span><b class="money" data-po="alloc">0</b></div>
     </div>`).join('') : '<div class="empty">分割方案數量為 0，本次沒有分割方案費用。</div>';
+  renderBaseSel();
+}
+function renderBaseSel() {
+  const c = int(S.split.count), sel = $('a_base');
+  if (int(S.split.basePlan) >= c) S.split.basePlan = 0;
+  sel.innerHTML = S.split.plans.slice(0, c).map((p, i) => `<option value="${i}">${esc(p.name || planName(i))}${i ? '' : '（預設）'}</option>`).join('');
+  sel.value = String(int(S.split.basePlan));
+  $('allocSub').hidden = !c;
 }
 function bindFields() {
   document.querySelectorAll('[data-bind]').forEach(el => {
@@ -681,7 +799,7 @@ function line(name, expr, amt) {
 }
 function warnings(c) {
   const w = [];
-  if (c.uSum && !c.bPos) w.push(['有建物面積，但建物棟數為 0。第 4 條第 2 款的面積費是「另」計，通常同時要收位置費。', '']);
+  if (c.uSum && !c.bPos) w.push(['有建物面積，但建物棟數／閉合區數為 0。第 4 條第 2 款的面積費是「另」計，通常同時要收位置費。', '']);
   if (c.ptsUnits && !c.nbT.total) w.push(['非屬建物有鑑定點數，但沒有填閉合區面積級距，基本費是 0。', '']);
   if (c.nbT.total && !c.pts) w.push(['非屬建物有閉合區，但鑑定點數為 0，施測費會是 0。', '']);
   if (c.planCount && !c.pT.total) w.push(['已設定分割方案，但還沒填分割前地號，基本費是 0。', '']);
@@ -690,11 +808,12 @@ function warnings(c) {
 }
 function update() {
   const c = calc(S);
+  const alloc = allocate(c, S);
   $('s_bld').textContent = fmt(c.bldSub);
   $('s_nb').textContent = fmt(c.nbSub);
   $('s_draw').textContent = fmt(c.draw);
   $('s_split').textContent = fmt(c.splitSub);
-  $('c_bpos').textContent = `${c.bPos} × 4,000 = ${fmt(c.bldPos)}`;
+  $('c_bpos').textContent = `${c.bPos} 棟（區） × 4,000 = ${fmt(c.bldPos)}`;
   $('t_bld').textContent = `${S.bld.areas.length} 列 · ${c.uSum} 單位 · ${fmt(c.bldArea)} 元`;
   $('t_nb').textContent = `${c.nbT.total} 區 · ${fmt(c.nbT.amount)} 元`;
   $('t_parcel').textContent = `${c.pT.total} 筆 · ${fmt(c.pT.amount)} 元`;
@@ -706,6 +825,7 @@ function update() {
     const p = c.plans[+el.dataset.plan]; if (!p) return;
     el.querySelector('[data-po="sub"]').textContent = fmt(p.subtotal);
     el.querySelector('[data-po="half"]').textContent = fmt(p.judgedHalf);
+    el.querySelector('[data-po="alloc"]').textContent = fmt(alloc[+el.dataset.plan]?.total || 0);
   });
 
   $('tot').textContent = fmt(c.total);
@@ -713,7 +833,7 @@ function update() {
   $('sampleBar').hidden = !S.sample;
 
   let h = `<div class="t-grp"><h4><span>建物</span><span class="money">${fmt(c.bldSub)}</span></h4>
-    ${line('位置費', `${c.bPos} 棟 × 4,000`, c.bldPos)}
+    ${line('位置費', `${c.bPos} 棟（區） × 4,000`, c.bldPos)}
     ${line('面積費', `${c.uSum} 單位 × 1,000`, c.bldArea)}</div>`;
   h += `<div class="t-grp"><h4><span>非屬建物</span><span class="money">${fmt(c.nbSub)}</span></h4>
     ${line('基本費', c.nbT.expr || '—', c.nbBase)}
@@ -724,6 +844,8 @@ function update() {
   h += `<div class="t-grp"><h4><span>分割方案（${c.planCount} 案）</span><span class="money">${fmt(c.splitSub)}</span></h4>
     ${c.planCount ? line('基本費（僅收一次）', c.pT.expr || '—', c.splitBaseOnce) : ''}
     ${c.plans.map(p => line(p.name, `${p.lines} 線×500${p.markers ? ` ＋ ${p.markers} 點×200` : ''}`, p.subtotal)).join('')}</div>`;
+  if (alloc.length) h += `<div class="t-grp"><h4><span>各方案分算應收</span><span class="money">${fmt(alloc.reduce((a, o) => a + o.total, 0))}</span></h4>
+    ${alloc.map(o => line(esc(o.title), o.isCommon ? '建物、非屬建物、製圖費' : o.isBase ? '含基本費' + (S.split.commonMode === 'separate' ? '' : '、共同費用') : '施測費', o.total)).join('')}</div>`;
   if (c.urgentExtra) h += `<div class="t-urgent"><span>限期 15 日內・加倍</span><span class="money">＋${fmt(c.urgentExtra)}</span></div>`;
   $('tbody').innerHTML = h;
 
@@ -731,17 +853,18 @@ function update() {
   $('warns').innerHTML = w.map(([t, k]) => `<div class="warn ${k}">${esc(t)}</div>`).join('');
   $('warns').hidden = !w.length;
 
-  renderReport(c);
+  $('btnPrintPlans').disabled = !alloc.length;
+  $('report').innerHTML = printMode === 'plans' ? statementsHTML(c, alloc) : summaryHTML(c);
   save();
 }
 
 /* ===== A4 報表 ===== */
-function renderReport(c) {
+function summaryHTML(c) {
   const m = S.meta;
   const rows = [];
   const tr = (cat, span, item, expr, amt, cls = '') => `<tr class="${cls}">${cat ? `<td class="cat" rowspan="${span}">${cat}</td>` : ''}<td>${item}</td><td class="expr">${expr}</td><td class="r">${fmt(amt)}</td></tr>`;
-  rows.push(tr('建物', 2, '位置費（附表二項次一，以整棟為單位）', `${c.bPos} 棟 × 4,000`, c.bldPos));
-  rows.push(tr('', 0, '面積費（每建號每層每 50 ㎡）', `${c.uSum} 單位 × 1,000`, c.bldArea));
+  rows.push(tr('建物', 2, '位置費（每棟／每閉合區）', `${c.bPos} 棟（區） × 4,000`, c.bldPos));
+  rows.push(tr('', 0, '面積費（每層每閉合區每 50 ㎡）', `${c.uSum} 單位 × 1,000`, c.bldArea));
   rows.push(tr('非屬<br>建物', 3, '基本費（依閉合區面積分級，僅收一次）', c.nbT.expr || '—', c.nbBase));
   rows.push(tr('', 0, '施測費（鑑定點每 5 點一單位）', `⌈${c.pts}÷5⌉=${c.ptsUnits} 單位 × 1,000${c.times > 1 ? ` × ${c.times} 案` : ''}`, c.nbSurvey));
   rows.push(tr('', 0, '面積費（每折點）', `${int(S.nb.areaPoints)} 點 × 200`, c.nbArea));
@@ -766,7 +889,7 @@ function renderReport(c) {
     </tbody></table>` : '';
 
   const dense = c.planCount > 8 || S.bld.areas.length > 12;
-  $('report').innerHTML = `<div class="rp${dense ? ' dense' : ''}">
+  return `<div class="rp${dense ? ' dense' : ''}">
     <div class="rp-h"><h1>囑託測量收費試算表</h1><div class="meta">試算日期 ${esc(m.date)}<br>試算工具 ${VERSION}${S.opt.urgent ? '<br><b>限期 15 日內辦理・加倍計收</b>' : ''}</div></div>
     <div class="rp-info">
       <div><b>囑託機關</b>${esc(m.court)}</div><div><b>來文字號</b>${esc(m.docNo)}</div><div><b>案號／股別</b>${esc(m.caseNo)}</div>
@@ -785,6 +908,39 @@ function renderReport(c) {
     </ul>
     <div class="rp-sign"><div>試算　${esc(m.handler)}</div><div>覆核</div><div>課長／主任</div></div>
   </div>`;
+}
+
+function statementsHTML(c, alloc) {
+  const m = S.meta, grand = alloc.reduce((a, o) => a + o.total, 0);
+  return alloc.map((o, k) => {
+    const groups = [];
+    o.items.forEach(x => { const g = groups.find(g => g.cat === x.cat); g ? g.items.push(x) : groups.push({ cat: x.cat, items: [x] }); });
+    const rows = groups.map(g => g.items.map((x, i) => `<tr>${i ? '' : `<td class="cat" rowspan="${g.items.length}">${g.cat === '非屬建物' ? '非屬<br>建物' : g.cat === '分割方案' ? '分割<br>方案' : g.cat}</td>`}<td>${x.name}</td><td class="expr">${x.expr || '—'}</td><td class="r">${fmt(x.amt)}</td></tr>`).join('')).join('');
+    const urgent = o.urgentExtra ? `<tr><td class="cat">加倍</td><td>限期 15 日內辦理（第 4 條第 2 項，製圖費除外）</td><td class="expr">× 1</td><td class="r">${fmt(o.urgentExtra)}</td></tr>` : '';
+    const notes = [];
+    if (o.isBase) notes.push('多項方案基本費僅收一次（第 4 條第 1 項第 1 款），由本案收取。');
+    if (!o.isBase && !o.isCommon) notes.push(`本案僅計收施測費；基本費由${esc(alloc.find(a => a.isBase).title)}收取。`);
+    if (o.isBase && S.split.commonMode !== 'separate') notes.push('建物、非屬建物、製圖費等共同費用併入本案計收。');
+    if (o.isCommon) notes.push('不屬於特定分割方案的費用。');
+    const p = c.plans.find(p => p.name === o.title);
+    if (p && !o.isCommon) notes.push(`判決確定後依已核定成果申請複丈、無需實地測量者（第 6 條）：(${fmt(c.pT.amount)} ＋ ${fmt(p.survey)}) ÷ 2 = ${fmt(p.judgedHalf)} 元，僅供參考。`);
+    return `<div class="rp">
+      <div class="rp-h"><h1>分割方案收費明細・${esc(o.title)}</h1><div class="meta">第 ${k + 1} 張／共 ${alloc.length} 張<br>試算日期 ${esc(m.date)}<br>試算工具 ${VERSION}</div></div>
+      <div class="rp-info">
+        <div><b>囑託機關</b>${esc(m.court)}</div><div><b>來文字號</b>${esc(m.docNo)}</div><div><b>案號／股別</b>${esc(m.caseNo)}</div>
+        <div class="span3"><b>地段地號／標的</b>${esc(m.land)}</div>
+      </div>
+      <table><thead><tr><th>類別</th><th>項目</th><th>計算式</th><th style="width:24mm">金額（元）</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" class="c">本案無費用</td></tr>'}${urgent}</tbody></table>
+      <div class="rp-total"><span class="k">${esc(o.title)} 應收</span><span class="v">NT$ ${fmt(o.total)}</span><span class="u">${toUpper(o.total)}</span></div>
+      <ul class="rp-notes">
+        ${notes.map(t => `<li>${t}</li>`).join('')}
+        <li>各張分算明細加總 NT$ ${fmt(grand)}，與總表應收合計 NT$ ${fmt(c.total)} 相同。</li>
+        <li>依據：土地複丈費及建築改良物測量費收費標準第 4 條、第 6 條、附表一、附表二；114 年 11 月 4 日非屬建物收費方式會議紀錄。本表為試算，實際以登記機關核定為準。</li>
+      </ul>
+      <div class="rp-sign"><div>試算　${esc(m.handler)}</div><div>覆核</div><div>課長／主任</div></div>
+    </div>`;
+  }).join('');
 }
 
 /* ===== 事件 ===== */
@@ -811,7 +967,7 @@ form.addEventListener('input', e => {
   const plan = t.closest('[data-plan]');
   if (plan && t.dataset.pf) {
     S.split.plans[+plan.dataset.plan][t.dataset.pf] = t.value;
-    if (t.dataset.pf === 'name') plan.querySelector('.plan-badge').textContent = (t.value || planName(+plan.dataset.plan)).slice(0, 1);
+    if (t.dataset.pf === 'name') { plan.querySelector('.plan-badge').textContent = (t.value || planName(+plan.dataset.plan)).slice(0, 1); renderBaseSel(); }
     update();
   }
 });
@@ -851,15 +1007,21 @@ $('btnStartBlank').addEventListener('click', () => { S = blank(); renderAll(); t
 $('btnSample').addEventListener('click', () => { S = sample(); renderAll(); toast('已載入範例'); });
 // 列印前量報表高度，超過一張 A4 可印範圍（約 275mm）就整體縮小
 function fitReport() {
-  const rp = $('report'), inner = rp.firstElementChild; if (!inner) return;
-  inner.style.zoom = '';
+  const rp = $('report');
   rp.style.cssText = 'display:block;position:absolute;left:-9999px;top:0;width:186mm;visibility:hidden';
-  const mm = rp.offsetWidth / 186, h = inner.offsetHeight / mm;
+  const mm = rp.offsetWidth / 186;
+  [...rp.children].forEach(inner => {
+    inner.style.zoom = '';
+    const h = inner.offsetHeight / mm;
+    if (h > 272) inner.style.zoom = (272 / h).toFixed(3);
+  });
   rp.style.cssText = '';
-  if (h > 272) inner.style.zoom = (272 / h).toFixed(3);
 }
+let printMode = 'summary';
 window.addEventListener('beforeprint', () => { update(); fitReport(); });
-$('btnPrint').addEventListener('click', () => window.print());
+window.addEventListener('afterprint', () => { if (printMode !== 'summary') { printMode = 'summary'; update(); } });
+$('btnPrint').addEventListener('click', () => { printMode = 'summary'; window.print(); });
+$('btnPrintPlans').addEventListener('click', () => { printMode = 'plans'; window.print(); });
 $('btnExport').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -896,6 +1058,17 @@ function fallbackCopy(text) {
 form.addEventListener('input', () => { if (S.sample) { S.sample = false; $('sampleBar').hidden = true; save(); } }, true);
 
 $('ver').textContent = VERSION;
+$('newsTitle').textContent = `${VERSION.split('（')[0]} 更新內容`;
+$('featList').innerHTML = FEATURES.map(f => `<li>${esc(f)}</li>`).join('');
+$('logList').innerHTML = CHANGELOG.map((v, i) => `<div class="log${i ? ' old' : ''}"><div class="log-v">${v.ver}${i ? '' : '（目前版本）'}<span class="num">${v.date}</span></div><ul>${v.items.map(([k, t]) => `<li><span class="kind${k === '新增' ? ' new' : ''}">${k}</span><span>${esc(t)}</span></li>`).join('')}</ul></div>`).join('');
+const NEWS_KEY = 'survey-fee-calc.seen';
+let seen = ''; try { seen = localStorage.getItem(NEWS_KEY) || ''; } catch (e) {}
+if (seen !== VERSION) { $('news').hidden = false; $('newsDot').hidden = false; }
+$('btnNews').addEventListener('click', () => { $('news').hidden = !$('news').hidden; });
+$('btnNewsClose').addEventListener('click', () => {
+  $('news').hidden = true; $('newsDot').hidden = true;
+  try { localStorage.setItem(NEWS_KEY, VERSION); } catch (e) {}
+});
 renderAll();
 </script>
 </body>

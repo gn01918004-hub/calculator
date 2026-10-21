@@ -9,5 +9,6 @@ cp index.html "dist/${name}.html"
 cp index.html "dist/${name}/${name}.html"
 cp docs/使用說明.txt "dist/${name}/使用說明.txt"
 cp docs/規定與計算邏輯檢查.md "dist/${name}/規定與計算邏輯檢查.md"
+cp CHANGELOG.md "dist/${name}/更新日誌.md"
 (cd dist && zip -qr "${name}.zip" "${name}" && rm -rf "${name}")
 ls -l dist
