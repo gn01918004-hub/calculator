@@ -12,38 +12,32 @@
 /* 版面概念：左側為「資料欄」輸入（依收費類別分區），右側為隨填隨算的試算單；列印時改出一張 A4 正式報表。
    色彩取自地籍圖：方格紙底、藍黑墨線、朱紅印泥只用在合計金額與印記。 */
 :root {
-  --paper: #eef3f2;
-  --grid: #dbe5e4;
-  --surface: #ffffff;
-  --surface-2: #f6f9f9;
-  --ink: #17293a;
-  --muted: #5a6b78;
-  --line: #cfdadd;
-  --accent: #1d5b78;
-  --accent-soft: #e2eef3;
-  --seal: #b3302a;
-  --seal-soft: #fbeceb;
-  --warn: #9a6200;
-  --warn-soft: #fff4dc;
-  --ok: #2c7a4b;
+  /* 預設深色：降低整片白底的刺眼感；右上角可切換淺色 */
+  --paper: #11181d;
+  --grid: #172128;
+  --surface: #172229;
+  --surface-2: #1c2830;
+  --ink: #d9e2e7;
+  --muted: #8fa0ab;
+  --line: #2b3a44;
+  --accent: #72b4d4;
+  --accent-soft: #1c3442;
+  --seal: #e06a5f;
+  --seal-soft: #3a2120;
+  --warn: #e2b04f;
+  --warn-soft: #33291a;
+  --ok: #6cc690;
   --font-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --r: 10px;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #0e1519; --grid: #16222a; --surface: #152029; --surface-2: #1a2731;
-    --ink: #e2eaee; --muted: #94a5b0; --line: #2a3a45; --accent: #6db2d3; --accent-soft: #1b3443;
-    --seal: #e5685d; --seal-soft: #3a1f1e; --warn: #e9b44c; --warn-soft: #3a2e14; --ok: #6cc690;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper: #0e1519; --grid: #16222a; --surface: #152029; --surface-2: #1a2731;
-  --ink: #e2eaee; --muted: #94a5b0; --line: #2a3a45; --accent: #6db2d3; --accent-soft: #1b3443;
-  --seal: #e5685d; --seal-soft: #3a1f1e; --warn: #e9b44c; --warn-soft: #3a2e14; --ok: #6cc690;
   color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --paper: #eef3f2; --grid: #dbe5e4; --surface: #ffffff; --surface-2: #f6f9f9;
+  --ink: #17293a; --muted: #5a6b78; --line: #cfdadd; --accent: #1d5b78; --accent-soft: #e2eef3;
+  --seal: #b3302a; --seal-soft: #fbeceb; --warn: #9a6200; --warn-soft: #fff4dc; --ok: #2c7a4b;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -144,11 +138,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sec-h .sum { margin-left: auto; font-family: var(--font-num); font-weight: 600; font-size: 15px; }
 .sec-x { border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; padding: 2px 8px; border-radius: 6px; }
 .sec-x:hover { border-color: var(--seal); color: var(--seal); }
-.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-.chip { display: grid; gap: 2px; text-align: left; padding: 10px 12px 10px 36px; border: 1.5px dashed var(--line); border-radius: 9px; background: var(--surface); cursor: pointer; position: relative; }
-.chip::before { content: "＋"; position: absolute; left: 12px; top: 10px; color: var(--accent); font-weight: 700; }
-.chip b { font-size: 15px; }
-.chip span { font-size: 12.5px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { flex: 1 1 140px; display: grid; align-content: start; gap: 2px; text-align: left; padding: 10px 10px 10px 30px; border: 1.5px dashed var(--line); border-radius: 9px; background: var(--surface); cursor: pointer; position: relative; }
+.chip::before { content: "＋"; position: absolute; left: 10px; top: 10px; color: var(--accent); font-weight: 700; }
+.chip b { font-size: 14.5px; white-space: nowrap; }
+.chip span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip:hover { border-color: var(--accent); }
 .chip[aria-pressed="true"] { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
 .chip[aria-pressed="true"]::before { content: "✓"; }
@@ -319,6 +313,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .rp-notes { font-size: 7.8pt; color: #222; margin: 0 0 3mm; padding-left: 4mm; }
 .rp-notes li { margin-bottom: .6mm; }
 </style>
+<script>try { if (localStorage.getItem('survey-fee-calc.theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}</script>
 </head>
 <body>
 <div class="app">
@@ -330,6 +325,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
       <p>法院或行政執行分署囑託之現況測量、非屬建物位置面積測量與共有物分割方案。依《土地複丈費及建築改良物測量費收費標準》第 4 條、附表一、附表二，及 114 年 11 月 4 日非屬建物收費內規計算。</p>
     </div>
     <div class="tools">
+      <button class="btn ghost" id="btnTheme" type="button">淺色模式</button>
       <button class="btn ghost" id="btnRules" type="button" aria-expanded="false" aria-controls="rules">相關規定</button>
       <button class="btn ghost" id="btnNews" type="button">更新內容<span class="news-dot" id="newsDot" hidden></span></button>
       <button class="btn ghost" id="btnSample" type="button">載入範例</button>
@@ -464,10 +460,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
       <div class="sec-b">
         <div class="chips" id="chips">
           <button type="button" class="chip" data-sec-toggle="bld" aria-pressed="false"><b>建物部分</b><span>位置費、面積費</span></button>
-          <button type="button" class="chip" data-sec-toggle="nb" aria-pressed="false"><b>非屬建物</b><span>基本費、施測費、面積費</span></button>
-          <button type="button" class="chip" data-sec-toggle="draw" aria-pressed="false"><b>製圖費</b><span>每張 20 元，首張免收</span></button>
-          <button type="button" class="chip" data-sec-toggle="split" aria-pressed="false"><b>共有物分割方案</b><span>基本費、各方案施測費</span></button>
-          <button type="button" class="chip" data-sec-toggle="judged" aria-pressed="false"><b>判決確定分割</b><span>第 6 條半數計收</span></button>
+          <button type="button" class="chip" data-sec-toggle="nb" aria-pressed="false"><b>非屬建物</b><span>基本、施測、面積</span></button>
+          <button type="button" class="chip" data-sec-toggle="draw" aria-pressed="false"><b>製圖費</b><span>首張免收</span></button>
+          <button type="button" class="chip" data-sec-toggle="split" aria-pressed="false"><b>共有物分割方案</b><span>基本費、施測費</span></button>
+          <button type="button" class="chip" data-sec-toggle="judged" aria-pressed="false"><b>判決確定分割</b><span>第 6 條半數</span></button>
         </div>
         <p class="empty" id="noSec">尚未加入任何收費項目。</p>
       </div>
@@ -695,7 +691,7 @@ const RATES = {
 const TIERS = ['未滿 200 ㎡', '200 以上未滿 1,000 ㎡', '1,000 以上未滿 10,000 ㎡', '10,000 ㎡ 以上'];
 const PLAN_NAMES = '甲乙丙丁戊己庚辛壬癸';
 const STORE_KEY = 'survey-fee-calc.v1';
-const VERSION = 'v1.2.1（2026-10-21）';
+const VERSION = 'v1.2.2（2026-10-21）';
 /* 更新紀錄：改版時在最上面加一筆，並同步更新 CHANGELOG.md */
 const FEATURES = [
   '分割方案數量自訂，填幾案就產生幾張方案卡，名稱可改',
@@ -709,6 +705,10 @@ const FEATURES = [
   '資料自動保存，可匯出、匯入 .json 交接案件',
 ];
 const CHANGELOG = [
+  { ver: 'v1.2.2', date: '2026-10-21', items: [
+    ['調整', '介面預設改為深色，降低刺眼；右上角可切換淺色模式，會記住選擇。'],
+    ['調整', '收費項目五個按鈕排成一列，不再有單獨掉到下一行的格子。'],
+  ] },
   { ver: 'v1.2.1', date: '2026-10-21', items: [
     ['調整', 'A4 總表拿掉核章欄（報表為內部參考用），試算人改印在報表右上角。'],
   ] },
@@ -1279,6 +1279,14 @@ function fallbackCopy(text) {
 form.addEventListener('input', () => { if (S.sample) { S.sample = false; $('sampleBar').hidden = true; save(); } }, true);
 
 $('ver').textContent = VERSION;
+const themeLabel = () => { $('btnTheme').textContent = document.documentElement.dataset.theme === 'light' ? '深色模式' : '淺色模式'; };
+themeLabel();
+$('btnTheme').addEventListener('click', () => {
+  const light = document.documentElement.dataset.theme !== 'light';
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  try { localStorage.setItem('survey-fee-calc.theme', light ? 'light' : 'dark'); } catch (e) {}
+  themeLabel();
+});
 $('newsTitle').textContent = `${VERSION.split('（')[0]} 更新內容`;
 $('featList').innerHTML = FEATURES.map(f => `<li>${esc(f)}</li>`).join('');
 $('logList').innerHTML = CHANGELOG.map((v, i) => `<div class="log${i ? ' old' : ''}"><div class="log-v">${v.ver}${i ? '' : '（目前版本）'}<span class="num">${v.date}</span></div><ul>${v.items.map(([k, t]) => `<li><span class="kind${k === '新增' ? ' new' : ''}">${k}</span><span>${esc(t)}</span></li>`).join('')}</ul></div>`).join('');
