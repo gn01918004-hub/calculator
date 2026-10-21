@@ -318,9 +318,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .rp-total .u { grid-column: 1 / -1; font: 700 11pt var(--font-display); border-top: .5pt solid #000; padding-top: 1.5mm; }
 .rp-notes { font-size: 7.8pt; color: #222; margin: 0 0 3mm; padding-left: 4mm; }
 .rp-notes li { margin-bottom: .6mm; }
-.rp-sign { display: grid; grid-template-columns: repeat(3, 1fr); border: .8pt solid #000; }
-.rp-sign div { border-right: .5pt solid #000; height: 17mm; padding: 1mm 2mm; font-size: 8.5pt; }
-.rp-sign div:last-child { border-right: 0; }
 </style>
 </head>
 <body>
@@ -698,13 +695,13 @@ const RATES = {
 const TIERS = ['未滿 200 ㎡', '200 以上未滿 1,000 ㎡', '1,000 以上未滿 10,000 ㎡', '10,000 ㎡ 以上'];
 const PLAN_NAMES = '甲乙丙丁戊己庚辛壬癸';
 const STORE_KEY = 'survey-fee-calc.v1';
-const VERSION = 'v1.2（2026-10-21）';
+const VERSION = 'v1.2.1（2026-10-21）';
 /* 更新紀錄：改版時在最上面加一筆，並同步更新 CHANGELOG.md */
 const FEATURES = [
   '分割方案數量自訂，填幾案就產生幾張方案卡，名稱可改',
   '邊填邊算，每一項都列出計算式，漏填會跳出提醒',
   '收費項目按需加入，畫面只留本案用得到的區塊',
-  '可印一張 A4 總表，也可印各方案分算明細（每案一張）',
+  '可印一張 A4 總表，也可印各方案分算明細（每案一張），供內部參考',
   '判決確定分割獨立計算（第 6 條半數），可從分割方案一鍵帶入',
   '右上角「相關規定」可隨時查閱條文與附表',
   '多項方案基本費只收一次，預設由第一案收取，可改',
@@ -712,6 +709,9 @@ const FEATURES = [
   '資料自動保存，可匯出、匯入 .json 交接案件',
 ];
 const CHANGELOG = [
+  { ver: 'v1.2.1', date: '2026-10-21', items: [
+    ['調整', 'A4 總表拿掉核章欄（報表為內部參考用），試算人改印在報表右上角。'],
+  ] },
   { ver: 'v1.2', date: '2026-10-21', items: [
     ['新增', '「收費項目」：建物、非屬建物、製圖費、分割方案、判決確定分割預設隱藏，按需加入。'],
     ['調整', '第一次開啟為空白畫面；需要範例時按「載入範例」。'],
@@ -1097,7 +1097,7 @@ function summaryHTML(c) {
 
   const dense = c.planCount > 8 || (c.on.bld && S.bld.areas.length > 12);
   return `<div class="rp${dense ? ' dense' : ''}">
-    <div class="rp-h"><h1>囑託測量收費試算表</h1><div class="meta">試算日期 ${esc(m.date)}<br>試算工具 ${VERSION}${S.opt.urgent ? '<br><b>限期 15 日內辦理・加倍計收</b>' : ''}</div></div>
+    <div class="rp-h"><h1>囑託測量收費試算表</h1><div class="meta">內部參考用<br>試算日期 ${esc(m.date)}${m.handler ? `　試算人 ${esc(m.handler)}` : ''}<br>試算工具 ${VERSION}${S.opt.urgent ? '<br><b>限期 15 日內辦理・加倍計收</b>' : ''}</div></div>
     <div class="rp-info">
       <div><b>囑託機關</b>${esc(m.court)}</div><div><b>來文字號</b>${esc(m.docNo)}</div><div><b>案號／股別</b>${esc(m.caseNo)}</div>
       <div class="span3"><b>地段地號／標的</b>${esc(m.land)}</div>
@@ -1114,7 +1114,6 @@ function summaryHTML(c) {
       ${c.judged ? '<li>判決確定分割依第 6 條，依已核定成果辦理、無需實地測量者半數計收，不適用限期加倍。</li>' : ''}
       <li>依據：土地複丈費及建築改良物測量費收費標準第 4 條、第 6 條、附表一、附表二；114 年 11 月 4 日「受理囑託非屬建築物之位置與面積測量」收費方式會議紀錄。本表為試算，實際以登記機關核定為準。</li>
     </ul>
-    <div class="rp-sign"><div>試算　${esc(m.handler)}</div><div>覆核</div><div>課長／主任</div></div>
   </div>`;
 }
 
@@ -1131,7 +1130,7 @@ function statementsHTML(c, alloc) {
     if (o.isBase && S.split.commonMode !== 'separate' && o.items.some(x => x.cat !== '分割方案' && !(x.cat === '非屬建物' && c.times > 1))) notes.push('共同費用（建物、非屬建物、製圖費、判決確定分割）併入本案計收。');
     if (o.isCommon) notes.push('不屬於特定分割方案的費用。');
     return `<div class="rp">
-      <div class="rp-h"><h1>分割方案收費明細・${esc(o.title)}</h1><div class="meta">第 ${k + 1} 張／共 ${alloc.length} 張<br>試算日期 ${esc(m.date)}<br>試算工具 ${VERSION}</div></div>
+      <div class="rp-h"><h1>分割方案收費明細・${esc(o.title)}</h1><div class="meta">內部參考用・第 ${k + 1} 張／共 ${alloc.length} 張<br>試算日期 ${esc(m.date)}${m.handler ? `　試算人 ${esc(m.handler)}` : ''}<br>試算工具 ${VERSION}</div></div>
       <div class="rp-info">
         <div><b>囑託機關</b>${esc(m.court)}</div><div><b>來文字號</b>${esc(m.docNo)}</div><div><b>案號／股別</b>${esc(m.caseNo)}</div>
         <div class="span3"><b>地段地號／標的</b>${esc(m.land)}</div>
