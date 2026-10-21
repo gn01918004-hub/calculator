@@ -39,5 +39,8 @@
 
 ## 散佈給同事
 
-- 傳 `index.html` 單一檔案即可。
-- 或在 GitHub 開啟 Pages（Settings → Pages → Branch 選 `main`／根目錄），同事用網址開啟，永遠是最新版。
+- **可散佈檔案**在 `dist/`：
+  - `囑託測量收費試算_v1.0.html`：單一檔案，直接傳給同事即可。
+  - `囑託測量收費試算_v1.0.zip`：計算器＋使用說明＋規定檢查報告。
+- 改版時：修改 `index.html` 裡的 `VERSION`，執行 `./scripts/build.sh` 重新產生 `dist/`。
+- 或在 GitHub 開啟 Pages（Settings → Pages → 選本分支／根目錄），同事用網址開啟，永遠是最新版。

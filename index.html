@@ -457,7 +457,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
   <footer class="foot">
     <span>資料只存在這台電腦的瀏覽器內，不會上傳。費率集中寫在程式碼開頭的 RATES，法規修正時改那裡即可。</span>
-    <span>本頁為試算工具，實際收費以登記機關核定為準。</span>
+    <span>本頁為試算工具，實際收費以登記機關核定為準。版本 <span id="ver"></span></span>
   </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -485,6 +485,7 @@ const RATES = {
 const TIERS = ['未滿 200 ㎡', '200 以上未滿 1,000 ㎡', '1,000 以上未滿 10,000 ㎡', '10,000 ㎡ 以上'];
 const PLAN_NAMES = '甲乙丙丁戊己庚辛壬癸';
 const STORE_KEY = 'survey-fee-calc.v1';
+const VERSION = 'v1.0（2026-10-21）';
 
 /* ===== 純計算 ===== */
 const n = v => { const x = Number(v); return Number.isFinite(x) && x > 0 ? x : 0; };
@@ -766,7 +767,7 @@ function renderReport(c) {
 
   const dense = c.planCount > 8 || S.bld.areas.length > 12;
   $('report').innerHTML = `<div class="rp${dense ? ' dense' : ''}">
-    <div class="rp-h"><h1>囑託測量收費試算表</h1><div class="meta">試算日期 ${esc(m.date)}${S.opt.urgent ? '<br><b>限期 15 日內辦理・加倍計收</b>' : ''}</div></div>
+    <div class="rp-h"><h1>囑託測量收費試算表</h1><div class="meta">試算日期 ${esc(m.date)}<br>試算工具 ${VERSION}${S.opt.urgent ? '<br><b>限期 15 日內辦理・加倍計收</b>' : ''}</div></div>
     <div class="rp-info">
       <div><b>囑託機關</b>${esc(m.court)}</div><div><b>來文字號</b>${esc(m.docNo)}</div><div><b>案號／股別</b>${esc(m.caseNo)}</div>
       <div class="span3"><b>地段地號／標的</b>${esc(m.land)}</div>
@@ -894,6 +895,7 @@ function fallbackCopy(text) {
 // 有任何使用者輸入後就不再是範例
 form.addEventListener('input', () => { if (S.sample) { S.sample = false; $('sampleBar').hidden = true; save(); } }, true);
 
+$('ver').textContent = VERSION;
 renderAll();
 </script>
 </body>
