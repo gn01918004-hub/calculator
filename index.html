@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>囑託測量收費試算</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* 版面概念：左側為「資料欄」輸入（依收費類別分區），右側為隨填隨算的試算單；列印時改出一張 A4 正式報表。
+   色彩取自地籍圖：方格紙底、藍黑墨線、朱紅印泥只用在合計金額與印記。 */
+:root {
+  --paper: #eef3f2;
+  --grid: #dbe5e4;
+  --surface: #ffffff;
+  --surface-2: #f6f9f9;
+  --ink: #17293a;
+  --muted: #5a6b78;
+  --line: #cfdadd;
+  --accent: #1d5b78;
+  --accent-soft: #e2eef3;
+  --seal: #b3302a;
+  --seal-soft: #fbeceb;
+  --warn: #9a6200;
+  --warn-soft: #fff4dc;
+  --ok: #2c7a4b;
+  --font-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e1519; --grid: #16222a; --surface: #152029; --surface-2: #1a2731;
+    --ink: #e2eaee; --muted: #94a5b0; --line: #2a3a45; --accent: #6db2d3; --accent-soft: #1b3443;
+    --seal: #e5685d; --seal-soft: #3a1f1e; --warn: #e9b44c; --warn-soft: #3a2e14; --ok: #6cc690;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e1519; --grid: #16222a; --surface: #152029; --surface-2: #1a2731;
+  --ink: #e2eaee; --muted: #94a5b0; --line: #2a3a45; --accent: #6db2d3; --accent-soft: #1b3443;
+  --seal: #e5685d; --seal-soft: #3a1f1e; --warn: #e9b44c; --warn-soft: #3a2e14; --ok: #6cc690;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font: 15px/1.6 var(--font-body);
+}
+.num, input[type="number"], .money { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.wrap {
+  max-width: 1240px; margin: 0 auto;
+  padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- masthead ---------- */
+.mast { display: flex; gap: 20px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 22px; }
+.mast h1 { font: 900 clamp(28px, 4.2vw, 42px)/1.15 var(--font-display); margin: 0; letter-spacing: .04em; text-wrap: balance; }
+.mast p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; font-size: 14px; }
+.mast .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px;
+  padding: 8px 14px; cursor: pointer; font-size: 14px; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 700; }
+.btn.primary:hover { filter: brightness(1.08); color: var(--surface); }
+.btn.ghost { background: transparent; }
+.btn.danger:hover { border-color: var(--seal); color: var(--seal); }
+.btn.small { padding: 4px 10px; font-size: 13px; }
+
+.sample-bar {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  background: var(--warn-soft); color: var(--warn); border: 1px dashed var(--warn);
+  border-radius: var(--r); padding: 10px 14px; margin-bottom: 18px; font-size: 14px;
+}
+
+/* ---------- layout ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+@media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.form { display: grid; gap: 18px; min-width: 0; }
+
+.sec { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.sec-h {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 14px 18px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2);
+}
+.sec-h h2 { margin: 0; font: 700 19px/1.3 var(--font-display); letter-spacing: .03em; }
+.basis { font-size: 12px; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 10px; letter-spacing: .02em; }
+.sec-h .sum { margin-left: auto; font-family: var(--font-num); font-weight: 600; font-size: 15px; }
+.sec-b { padding: 16px 18px 18px; display: grid; gap: 16px; }
+.sub { display: grid; gap: 10px; }
+.sub > h3 { margin: 0; font-size: 15px; font-weight: 700; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.sub > h3 small { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+.hint { color: var(--muted); font-size: 13px; margin: 0; }
+
+/* fields */
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > label, .lbl { font-size: 13px; color: var(--muted); }
+.in, select.in {
+  width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 7px; padding: 7px 10px; font-size: 15px;
+}
+.in:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.in:disabled { background: var(--surface-2); color: var(--muted); }
+.in.fill { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 35%, var(--line)); }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+
+.count-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.count-row .lbl { min-width: 9em; color: var(--ink); font-size: 14px; }
+.count-row .note { color: var(--muted); font-size: 13px; flex-basis: 100%; }
+.stepper { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.stepper button { border: 0; background: var(--surface-2); width: 34px; cursor: pointer; font-size: 18px; line-height: 1; }
+.stepper button:hover { color: var(--accent); }
+.stepper input { width: 70px; border: 0; text-align: center; padding: 7px 4px; background: var(--warn-soft); font-size: 16px; -moz-appearance: textfield; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.stepper input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.unit { color: var(--muted); font-size: 13px; }
+.calc-chip { font-family: var(--font-num); font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 2px 9px; border-radius: 6px; }
+
+/* row lists */
+.rows { display: grid; gap: 8px; }
+.row {
+  display: grid; gap: 8px; align-items: center;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.6fr) 96px auto;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px;
+}
+.row.bld { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+.row .out { font-family: var(--font-num); font-size: 13px; color: var(--accent); text-align: right; white-space: nowrap; }
+.row-head { display: grid; gap: 8px; padding: 0 9px; font-size: 12px; color: var(--muted);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.6fr) 96px 30px; }
+.row-head.bld { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 30px; }
+.x { border: 0; background: transparent; color: var(--muted); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; font-size: 18px; }
+.x:hover { background: var(--seal-soft); color: var(--seal); }
+.add { justify-self: start; }
+.empty { color: var(--muted); font-size: 13px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; }
+@media (max-width: 640px) {
+  .row, .row.bld { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .row > .wide { grid-column: 1 / -1; }
+  .row-head, .row-head.bld { display: none; }
+}
+
+details.fold > summary {
+  cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+}
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: "▸"; color: var(--accent); transition: transform .15s; }
+details.fold[open] > summary::before { transform: rotate(90deg); }
+details.fold[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+details.fold > .fold-b { border: 1px solid var(--line); border-top: 0; border-radius: 0 0 8px 8px; padding: 12px; display: grid; gap: 10px; }
+.sum-tag { margin-left: auto; font-family: var(--font-num); font-size: 13px; color: var(--muted); }
+
+/* segmented options */
+.seg { display: grid; gap: 8px; }
+.opt {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: start;
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; background: var(--surface);
+}
+.opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.opt input { margin-top: 5px; accent-color: var(--accent); }
+.opt b { font-weight: 700; }
+.opt span { grid-column: 2; color: var(--muted); font-size: 13px; }
+.tag { font-size: 11.5px; padding: 0 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+.tag.law { background: var(--accent); color: var(--surface); }
+.tag.old { border: 1px solid var(--muted); color: var(--muted); }
+.switch { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.switch input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--seal); }
+
+/* plans */
+.plan-head { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.plans { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.plan { border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 10px 12px 12px; display: grid; gap: 8px; min-width: 0; }
+.plan-top { display: flex; align-items: center; gap: 8px; }
+.plan-badge { font: 900 18px/1 var(--font-display); color: var(--accent); width: 34px; height: 34px; border: 1.5px solid var(--accent); border-radius: 50%; display: grid; place-items: center; flex: none; }
+.plan-top .in { font-weight: 700; padding: 5px 8px; }
+.plan .pair { display: grid; grid-template-columns: 1fr 86px; gap: 6px; align-items: center; font-size: 13px; }
+.plan .pair .in { padding: 5px 8px; text-align: right; }
+.plan-foot { display: flex; justify-content: space-between; border-top: 1px dashed var(--line); padding-top: 7px; font-size: 13px; }
+.plan-foot .money { font-weight: 600; }
+.plan-foot .half { color: var(--muted); }
+
+/* ---------- ticket ---------- */
+.ticket {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+  box-shadow: 0 10px 30px -18px color-mix(in srgb, var(--ink) 45%, transparent);
+}
+@media (max-width: 980px) { .ticket { position: static; } }
+.t-top { padding: 18px 20px 16px; border-bottom: 2px solid var(--ink); position: relative; }
+.t-top .eyebrow { font-size: 12px; letter-spacing: .18em; color: var(--muted); }
+.t-total { font: 600 clamp(34px, 5vw, 42px)/1.1 var(--font-num); color: var(--seal); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.t-total small { font-size: 16px; color: var(--muted); margin-right: 4px; font-weight: 400; }
+.t-upper { font-family: var(--font-display); font-size: 14px; margin-top: 4px; }
+.stamp {
+  position: absolute; right: 16px; top: 14px; width: 62px; height: 62px; border: 2.5px solid var(--seal); border-radius: 6px;
+  color: var(--seal); font: 900 15px/1.05 var(--font-display); display: grid; place-items: center; text-align: center;
+  transform: rotate(-8deg); opacity: .85; letter-spacing: .1em;
+}
+.t-body { padding: 8px 20px 16px; }
+.t-grp { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.t-grp:last-child { border-bottom: 0; }
+.t-grp h4 { margin: 0 0 4px; font-size: 13px; color: var(--muted); font-weight: 500; display: flex; justify-content: space-between; letter-spacing: .05em; }
+.t-grp h4 .money { color: var(--ink); font-weight: 600; }
+.t-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; font-size: 14px; padding: 2px 0; }
+.t-line .expr { grid-column: 1; font-family: var(--font-num); font-size: 12px; color: var(--muted); }
+.t-line .money { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+.t-line.zero { opacity: .45; }
+.t-urgent { background: var(--seal-soft); color: var(--seal); border-radius: 6px; padding: 6px 10px; margin-top: 8px; font-size: 13px; display: flex; justify-content: space-between; }
+.warns { display: grid; gap: 6px; padding: 12px 20px 16px; border-top: 1px solid var(--line); background: var(--surface-2); }
+.warn { font-size: 12.5px; color: var(--warn); display: flex; gap: 6px; }
+.warn::before { content: "!"; font-weight: 700; flex: none; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-size: 10px; margin-top: 2px; }
+.warn.info { color: var(--muted); }
+.t-actions { display: flex; gap: 8px; padding: 14px 20px 18px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.t-actions .btn.primary { flex: 1; justify-content: center; }
+
+.foot { margin-top: 28px; color: var(--muted); font-size: 12.5px; display: grid; gap: 4px; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 8px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- A4 report (print only) ---------- */
+#report { display: none; }
+@page { size: A4 portrait; margin: 11mm 12mm; }
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff !important; color: #000; font-size: 10pt; }
+  .app, .toast { display: none !important; }
+  #report { display: block; }
+}
+.rp { color: #000; font-family: var(--font-body); font-size: 9.6pt; line-height: 1.45; }
+.rp.dense { font-size: 8.6pt; line-height: 1.32; }
+.rp-h { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2.2pt solid #000; padding-bottom: 2mm; }
+.rp-h h1 { margin: 0; font: 900 18pt/1.2 var(--font-display); letter-spacing: .12em; }
+.rp-h .meta { text-align: right; font-size: 8.5pt; }
+.rp-info { display: grid; grid-template-columns: 1fr 1fr 1fr; border: .8pt solid #000; border-top: 0; margin-bottom: 3mm; }
+.rp-info div { padding: 1.2mm 2mm; border-top: .5pt solid #000; border-right: .5pt solid #000; min-height: 7mm; }
+.rp-info div:nth-child(3n) { border-right: 0; }
+.rp-info b { display: block; font-size: 7.5pt; font-weight: 500; color: #444; }
+.rp-info .span3 { grid-column: 1 / -1; border-right: 0; }
+.rp table { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
+.rp th, .rp td { border: .5pt solid #000; padding: 1mm 2mm; vertical-align: middle; }
+.rp th { background: #eee; font-weight: 700; font-size: 8.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.rp td.r { text-align: right; font-family: var(--font-num); white-space: nowrap; }
+.rp td.c { text-align: center; }
+.rp td.expr { font-family: var(--font-num); font-size: 8.2pt; }
+.rp td.cat { font-weight: 700; text-align: center; width: 17mm; }
+.rp tr.subtotal td { font-weight: 700; background: #f4f4f4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.rp .cap { font-weight: 700; margin: 0 0 1mm; font-size: 10pt; }
+.rp-total { display: grid; grid-template-columns: 1fr auto; align-items: center; border: 1.6pt solid #000; padding: 2.5mm 4mm; margin-bottom: 3mm; gap: 1mm 6mm; }
+.rp-total .k { font: 900 13pt var(--font-display); letter-spacing: .1em; }
+.rp-total .v { font: 600 18pt var(--font-num); text-align: right; }
+.rp-total .u { grid-column: 1 / -1; font: 700 11pt var(--font-display); border-top: .5pt solid #000; padding-top: 1.5mm; }
+.rp-notes { font-size: 7.8pt; color: #222; margin: 0 0 3mm; padding-left: 4mm; }
+.rp-notes li { margin-bottom: .6mm; }
+.rp-sign { display: grid; grid-template-columns: repeat(3, 1fr); border: .8pt solid #000; }
+.rp-sign div { border-right: .5pt solid #000; height: 17mm; padding: 1mm 2mm; font-size: 8.5pt; }
+.rp-sign div:last-child { border-right: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <h1>囑託測量收費試算</h1>
+      <p>法院或行政執行分署囑託之現況測量、非屬建物位置面積測量與共有物分割方案。依《土地複丈費及建築改良物測量費收費標準》第 4 條、附表一、附表二，及 114 年 11 月 4 日非屬建物收費內規計算。</p>
+    </div>
+    <div class="tools">
+      <button class="btn ghost" id="btnSample" type="button">載入範例</button>
+      <button class="btn ghost danger" id="btnClear" type="button">全部清除</button>
+      <button class="btn ghost" id="btnExport" type="button" data-top-only>匯出檔案</button>
+      <label class="btn ghost" data-top-only>匯入檔案<input type="file" id="fileImport" accept="application/json,.json" hidden></label>
+    </div>
+  </header>
+
+  <div class="sample-bar" id="sampleBar" hidden>
+    <span>目前顯示的是<b>範例數字</b>，不是任何真實案件。</span>
+    <button class="btn small" type="button" id="btnStartBlank">清空，開始填寫</button>
+  </div>
+
+  <div class="layout">
+  <form class="form" id="form" autocomplete="off" onsubmit="return false">
+
+    <!-- 案件資訊 -->
+    <section class="sec">
+      <div class="sec-h"><h2>案件資訊</h2><span class="hint">只印在報表上，不影響金額</span></div>
+      <div class="sec-b">
+        <div class="grid-3">
+          <div class="field"><label for="m_court">囑託機關</label><input class="in" id="m_court" data-bind="meta.court" placeholder="例：臺灣○○地方法院"></div>
+          <div class="field"><label for="m_doc">來文字號</label><input class="in" id="m_doc" data-bind="meta.docNo" placeholder="例：○院○○字第○○號"></div>
+          <div class="field"><label for="m_case">案號／股別</label><input class="in" id="m_case" data-bind="meta.caseNo" placeholder="例：113年度訴字第○號"></div>
+          <div class="field"><label for="m_land">地段地號／標的</label><input class="in" id="m_land" data-bind="meta.land" placeholder="例：○○段 123、124 地號"></div>
+          <div class="field"><label for="m_date">試算日期</label><input class="in" id="m_date" type="date" data-bind="meta.date"></div>
+          <div class="field"><label for="m_handler">試算人</label><input class="in" id="m_handler" data-bind="meta.handler"></div>
+        </div>
+        <label class="switch" for="o_urgent">
+          <input type="checkbox" id="o_urgent" data-bind="opt.urgent">
+          <span><b>限期 15 日內辦理</b>（第 4 條第 2 項：自收件之日起 15 日內辦理者，費用加倍計收）<br><span class="hint">加倍範圍：現況測量費與分割方案費。製圖費不在第 4 條內，不加倍。</span></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- 建物 -->
+    <section class="sec">
+      <div class="sec-h"><h2>建物部分</h2><span class="basis">第 4 條第 1 項第 2、3 款 · 附表二項次一</span><span class="sum money" id="s_bld">0</span></div>
+      <div class="sec-b">
+        <div class="sub">
+          <h3>位置費 <small>建物位置圖測量費，每單位 4,000 元</small></h3>
+          <div class="count-row">
+            <span class="lbl">建物棟數</span>
+            <span class="stepper"><button type="button" data-step="-1" data-for="b_pos" aria-label="減一">−</button><input type="number" id="b_pos" min="0" step="1" inputmode="numeric" data-bind="bld.pos"><button type="button" data-step="1" data-for="b_pos" aria-label="加一">+</button></span>
+            <span class="unit">棟</span>
+            <span class="calc-chip" id="c_bpos"></span>
+            <span class="note">附表二以「整棟建物」為單位。原試算表寫「一個閉合區為一格」，同一棟若有多個閉合區請只算一棟。</span>
+          </div>
+        </div>
+        <div class="sub">
+          <h3>面積費 <small>建物平面圖測量費，每建號每層每 50 ㎡ 為一單位，不足 50 ㎡ 以 50 ㎡ 計，每單位 1,000 元</small></h3>
+          <details class="fold" id="fold_bld">
+            <summary><span>各建號／各層面積</span><span class="sum-tag" id="t_bld"></span></summary>
+            <div class="fold-b">
+              <div class="row-head bld"><span>建號／層別／閉合區</span><span>面積（㎡）</span><span style="text-align:right">單位數</span><span></span></div>
+              <div class="rows" id="list_bld"></div>
+              <button type="button" class="btn small add" data-add="bld">＋ 新增一層／一區</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 非屬建物 -->
+    <section class="sec">
+      <div class="sec-h"><h2>非屬建物</h2><span class="basis">114.11.04 收費內規 · 準用附表一項次一</span><span class="sum money" id="s_nb">0</span></div>
+      <div class="sec-b">
+        <p class="hint">農作改良物、電纜線、油管等非屬建築改良物之位置與面積測量。</p>
+        <div class="sub">
+          <h3>位置費・基本費 <small>以每個位置（閉合區）的面積分級計收</small></h3>
+          <details class="fold" id="fold_nb">
+            <summary><span>各位置面積級距</span><span class="sum-tag" id="t_nb"></span></summary>
+            <div class="fold-b">
+              <p class="hint">填了面積就自動判斷級距；沒有實際面積時，直接從選單挑級距。同一級距有好幾區可以合併成一列填數量。</p>
+              <div class="row-head"><span>位置說明</span><span>面積（㎡，選填）</span><span>面積級距</span><span>數量</span><span></span></div>
+              <div class="rows" id="list_nb"></div>
+              <button type="button" class="btn small add" data-add="nb">＋ 新增位置</button>
+            </div>
+          </details>
+        </div>
+        <div class="sub">
+          <h3>位置費・施測費 <small>鑑定點每 5 點為一單位，不足 5 點以 5 點計，每單位 1,000 元</small></h3>
+          <div class="count-row">
+            <span class="lbl">鑑定點總數</span>
+            <span class="stepper"><button type="button" data-step="-1" data-for="n_pts" aria-label="減一">−</button><input type="number" id="n_pts" min="0" step="1" inputmode="numeric" data-bind="nb.points"><button type="button" data-step="1" data-for="n_pts" aria-label="加一">+</button></span>
+            <span class="unit">點</span>
+            <span class="calc-chip" id="c_npts"></span>
+          </div>
+        </div>
+        <div class="sub">
+          <h3>面積費 <small>需計算面積之物件，每個折點 200 元；圓形以 1 點計</small></h3>
+          <div class="count-row">
+            <span class="lbl">需算面積物件的折點數</span>
+            <span class="stepper"><button type="button" data-step="-1" data-for="n_apts" aria-label="減一">−</button><input type="number" id="n_apts" min="0" step="1" inputmode="numeric" data-bind="nb.areaPoints"><button type="button" data-step="1" data-for="n_apts" aria-label="加一">+</button></span>
+            <span class="unit">點</span>
+            <span class="calc-chip" id="c_napts"></span>
+            <span class="note">只算「需要計算面積」的物件。原試算表此欄與上一欄說明相同（全部閉合區總點數），兩者意義不同，請分開填。</span>
+          </div>
+        </div>
+        <div class="sub">
+          <h3>非屬建物成果有多項方案時</h3>
+          <div class="seg">
+            <label class="opt"><input type="radio" name="nbmulti" value="single" data-bind="nb.multi"><b>單一成果</b><span>位置費照上面計收一次。</span></label>
+            <label class="opt"><input type="radio" name="nbmulti" value="perPlan" data-bind="nb.multi"><b>需在各分割方案分別展示<i class="tag law">依內規(三)</i></b><span>基本費只收 1 次，施測費依分割方案數分別計收。</span></label>
+            <label class="opt"><input type="radio" name="nbmulti" value="waive" data-bind="nb.multi"><b>位置費不計收<i class="tag old">原試算表註記</i></b><span>原表 E6：「多分割方案需展示則位置費不必計收」。此作法與內規(三)不一致，保留供比較。</span></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 製圖費 -->
+    <section class="sec">
+      <div class="sec-h"><h2>雜項・製圖費</h2><span class="basis">沿用原試算表公式</span><span class="sum money" id="s_draw">0</span></div>
+      <div class="sec-b">
+        <div class="count-row">
+          <span class="lbl">來函需求張數</span>
+          <span class="stepper"><button type="button" data-step="-1" data-for="d_sheets" aria-label="減一">−</button><input type="number" id="d_sheets" min="0" step="1" inputmode="numeric" data-bind="draw.sheets"><button type="button" data-step="1" data-for="d_sheets" aria-label="加一">+</button></span>
+          <span class="unit">張</span>
+          <span class="calc-chip" id="c_draw"></span>
+          <span class="note">張數照來函填。計算方式為（張數 − 1）× 20 元，第一張不收費。相關規定頁未列此項依據，請確認。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分割方案 -->
+    <section class="sec">
+      <div class="sec-h"><h2>共有物分割方案</h2><span class="basis">第 4 條第 1 項第 1 款 · 附表一項次四</span><span class="sum money" id="s_split">0</span></div>
+      <div class="sec-b">
+        <div class="plan-head">
+          <span class="lbl" style="color:var(--ink);font-size:14px">分割方案數量</span>
+          <span class="stepper"><button type="button" data-step="-1" data-for="p_count" aria-label="減一">−</button><input type="number" id="p_count" min="0" max="40" step="1" inputmode="numeric" data-bind="split.count"><button type="button" data-step="1" data-for="p_count" aria-label="加一">+</button></span>
+          <span class="unit">案（填多少案就產生多少張方案卡）</span>
+        </div>
+
+        <div class="sub">
+          <h3>基本費計收方式</h3>
+          <div class="seg">
+            <label class="opt"><input type="radio" name="basemode" value="once" data-bind="opt.baseMode"><b>基本費僅收一次<i class="tag law">依第 4 條第 1 項第 1 款</i></b><span>「其有多項分割方案，基本費僅收一次，施測費分別計收。」</span></label>
+            <label class="opt"><input type="radio" name="basemode" value="each" data-bind="opt.baseMode"><b>每案都收基本費<i class="tag old">原試算表算法</i></b><span>原表甲、乙、丙案各自計算基本費並各自小計。</span></label>
+          </div>
+        </div>
+
+        <div class="sub">
+          <h3>基本費 <small>以分割前每筆地號面積為單位：未滿 200 ㎡ 1,500／200–未滿 1,000 ㎡ 2,000／1,000–未滿 10,000 ㎡ 2,500／10,000 ㎡ 以上 3,000</small></h3>
+          <details class="fold" id="fold_parcel">
+            <summary><span>分割前地號面積級距（各方案共用）</span><span class="sum-tag" id="t_parcel"></span></summary>
+            <div class="fold-b">
+              <p class="hint">分割前的地號對每個方案都相同，所以只填一次。填面積會自動判斷級距。</p>
+              <div class="row-head"><span>地號</span><span>面積（㎡，選填）</span><span>面積級距</span><span>筆數</span><span></span></div>
+              <div class="rows" id="list_parcel"></div>
+              <button type="button" class="btn small add" data-add="parcel">＋ 新增地號</button>
+            </div>
+          </details>
+        </div>
+
+        <div class="sub">
+          <h3>各方案施測費 <small>線段每條 500 元；未埋設界標一併申請確定界址點者，每點加繳 200 元（附表一附註三）</small></h3>
+          <div class="plans" id="plans"></div>
+          <p class="hint">「判決確定後」為參考金額：依第 6 條，判決確定後依已核定成果申請複丈、無需實地測量者，按（基本費 ＋ 該案施測費）半數計收。不列入本次合計。</p>
+        </div>
+      </div>
+    </section>
+  </form>
+
+  <!-- 試算單 -->
+  <aside class="ticket" aria-live="polite">
+    <div class="t-top">
+      <div class="eyebrow">應收合計</div>
+      <div class="t-total"><small>NT$</small><span id="tot">0</span></div>
+      <div class="t-upper" id="totUpper">新臺幣零元整</div>
+      <div class="stamp" aria-hidden="true">試<br>算</div>
+    </div>
+    <div class="t-body" id="tbody"></div>
+    <div class="warns" id="warns"></div>
+    <div class="t-actions">
+      <button class="btn primary" id="btnPrint" type="button" data-top-only>列印 A4 報表</button>
+      <button class="btn" id="btnCopy" type="button">複製明細</button>
+    </div>
+  </aside>
+  </div>
+
+  <footer class="foot">
+    <span>資料只存在這台電腦的瀏覽器內，不會上傳。費率集中寫在程式碼開頭的 RATES，法規修正時改那裡即可。</span>
+    <span>本頁為試算工具，實際收費以登記機關核定為準。</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+</div>
+
+<div id="report"></div>
+
+<script>
+'use strict';
+/* ===== 費率（法規修正時只改這裡） ===== */
+const RATES = {
+  bldPos: 4000,                     // 附表二項次一 建物位置圖測量費／棟
+  bldAreaUnit: 1000,                // 附表二項次一 建物平面圖測量費／單位
+  bldAreaSize: 50,                  // 每 50 ㎡ 一單位
+  nbBase: [2500, 3000, 3500, 4000], // 附表一項次一 基本費（依面積級距）
+  nbSurveyPer: 5,                   // 鑑定點每 5 點一單位
+  nbSurvey: 1000,                   // 附表一項次一 施測費／單位
+  nbAreaPoint: 200,                 // 內規(二) 每折點
+  drawPerSheet: 20,                 // 原試算表：製圖費每張
+  drawFreeSheets: 1,                // 原試算表：第一張免收
+  splitBase: [1500, 2000, 2500, 3000], // 附表一項次四 基本費
+  splitLine: 500,                   // 附表一項次四 施測費／線段
+  splitMarker: 200,                 // 附表一附註三 未埋設界標之界址點／點
+};
+const TIERS = ['未滿 200 ㎡', '200 以上未滿 1,000 ㎡', '1,000 以上未滿 10,000 ㎡', '10,000 ㎡ 以上'];
+const PLAN_NAMES = '甲乙丙丁戊己庚辛壬癸';
+const STORE_KEY = 'survey-fee-calc.v1';
+
+/* ===== 純計算 ===== */
+const n = v => { const x = Number(v); return Number.isFinite(x) && x > 0 ? x : 0; };
+const int = v => Math.floor(n(v));
+const tierOf = a => a < 200 ? 0 : a < 1000 ? 1 : a < 10000 ? 2 : 3;
+const rowTier = r => n(r.area) > 0 ? tierOf(n(r.area)) : (Number(r.tier) || 0);
+const rowQty = r => n(r.area) > 0 ? Math.max(1, int(r.qty)) : int(r.qty);
+const bldUnits = a => { const x = n(a); return x > 0 ? Math.ceil(Math.round(x * 1e4) / 1e4 / RATES.bldAreaSize) : 0; };
+const planName = i => i < PLAN_NAMES.length ? PLAN_NAMES[i] + '案' : '第' + (i + 1) + '案';
+const fmt = v => Math.round(v).toLocaleString('en-US');
+
+function tierSummary(rows, rates) {
+  const cnt = [0, 0, 0, 0];
+  rows.forEach(r => { cnt[rowTier(r)] += rowQty(r); });
+  const amount = cnt.reduce((s, c, i) => s + c * rates[i], 0);
+  const expr = cnt.map((c, i) => c ? `${c}×${fmt(rates[i])}` : '').filter(Boolean).join(' ＋ ');
+  return { cnt, amount, expr, total: cnt.reduce((a, b) => a + b, 0) };
+}
+
+function calc(s) {
+  const R = RATES;
+  const planCount = int(s.split.count);
+
+  // 建物
+  const bPos = int(s.bld.pos);
+  const units = s.bld.areas.map(a => bldUnits(a.area));
+  const uSum = units.reduce((a, b) => a + b, 0);
+  const bldPos = bPos * R.bldPos, bldArea = uSum * R.bldAreaUnit;
+
+  // 非屬建物
+  const nbT = tierSummary(s.nb.rows, R.nbBase);
+  const pts = int(s.nb.points), ptsUnits = Math.ceil(pts / R.nbSurveyPer);
+  const times = s.nb.multi === 'perPlan' ? Math.max(1, planCount) : 1;
+  const waive = s.nb.multi === 'waive';
+  const nbBase = waive ? 0 : nbT.amount;
+  const nbSurvey = waive ? 0 : ptsUnits * R.nbSurvey * times;
+  const nbArea = int(s.nb.areaPoints) * R.nbAreaPoint;
+
+  const fieldSub = bldPos + bldArea + nbBase + nbSurvey + nbArea;
+
+  // 製圖
+  const sheets = int(s.draw.sheets);
+  const draw = Math.max(0, sheets - R.drawFreeSheets) * R.drawPerSheet;
+
+  // 分割
+  const pT = tierSummary(s.split.parcels, R.splitBase);
+  const each = s.opt.baseMode === 'each';
+  const plans = s.split.plans.slice(0, planCount).map((p, i) => {
+    const lines = int(p.lines), markers = int(p.markers);
+    const survey = lines * R.splitLine + markers * R.splitMarker;
+    const base = each ? pT.amount : 0;
+    return { name: p.name || planName(i), lines, markers, survey, base, subtotal: base + survey, judgedHalf: (pT.amount + survey) / 2 };
+  });
+  const splitBaseOnce = planCount > 0 && !each ? pT.amount : 0;
+  const splitSub = splitBaseOnce + plans.reduce((a, p) => a + p.subtotal, 0);
+
+  const statutory = fieldSub + splitSub;
+  const urgentExtra = s.opt.urgent ? statutory : 0;
+  const total = statutory + urgentExtra + draw;
+
+  return {
+    bPos, units, uSum, bldPos, bldArea, bldSub: bldPos + bldArea,
+    nbT, pts, ptsUnits, times, waive, nbBase, nbSurvey, nbArea, nbSub: nbBase + nbSurvey + nbArea,
+    fieldSub, sheets, draw,
+    pT, each, plans, planCount, splitBaseOnce, splitSub,
+    statutory, urgentExtra, total,
+  };
+}
+
+/* 新臺幣大寫 */
+function toUpper(v) {
+  v = Math.round(v);
+  if (v <= 0) return '新臺幣零元整';
+  const D = '零壹貳參肆伍陸柒捌玖', U = ['', '拾', '佰', '仟'], S = ['', '萬', '億', '兆'];
+  const sec = p => { let out = '', z = false; for (let j = 3; j >= 0; j--) { const x = Math.floor(p / 10 ** j) % 10; if (!x) { if (out) z = true; } else { if (z) { out += '零'; z = false; } out += D[x] + U[j]; } } return out; };
+  const parts = []; while (v > 0) { parts.push(v % 10000); v = Math.floor(v / 10000); }
+  let res = '', pendingZero = false;
+  for (let k = parts.length - 1; k >= 0; k--) {
+    const p = parts[k];
+    if (!p) { if (res) pendingZero = true; continue; }
+    if (res && (pendingZero || p < 1000)) res += '零';
+    res += sec(p) + S[k]; pendingZero = false;
+  }
+  return '新臺幣' + res + '元整';
+}
+
+/* ===== 狀態 ===== */
+const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const uid = () => Math.random().toString(36).slice(2, 9);
+function blank() {
+  return {
+    v: 1, sample: false,
+    meta: { court: '', docNo: '', caseNo: '', land: '', date: today(), handler: '' },
+    opt: { urgent: false, baseMode: 'once' },
+    bld: { pos: 0, areas: [] },
+    nb: { rows: [], points: 0, areaPoints: 0, multi: 'single' },
+    draw: { sheets: 0 },
+    split: { count: 0, parcels: [], plans: [] },
+  };
+}
+function sample() {
+  const s = blank();
+  s.sample = true;
+  s.meta = { court: '臺灣○○地方法院（範例）', docNo: '○院○民○字第○○○號', caseNo: '113年度訴字第○○號', land: '○○段 123、124 地號', date: today(), handler: '' };
+  s.bld = { pos: 1, areas: [{ id: uid(), label: '1 層', area: 132.6 }, { id: uid(), label: '2 層', area: 98.2 }, { id: uid(), label: '增建（鐵皮）', area: 35 }] };
+  s.nb = { rows: [{ id: uid(), label: '果樹區', area: 640, tier: 1, qty: 1 }, { id: uid(), label: '資材棚', area: '', tier: 0, qty: 2 }], points: 12, areaPoints: 6, multi: 'single' };
+  s.draw = { sheets: 3 };
+  s.split = {
+    count: 3,
+    parcels: [{ id: uid(), label: '123 地號', area: 856.4, tier: 1, qty: 1 }, { id: uid(), label: '124 地號', area: 1203, tier: 2, qty: 1 }],
+    plans: [{ name: '甲案', lines: 6, markers: 0 }, { name: '乙案', lines: 8, markers: 0 }, { name: '丙案', lines: 5, markers: 2 }],
+  };
+  return s;
+}
+function normalize(s) {
+  const b = blank();
+  const o = Object.assign(b, s || {});
+  for (const k of ['meta', 'opt', 'bld', 'nb', 'draw', 'split']) o[k] = Object.assign(blank()[k], (s || {})[k] || {});
+  for (const k of ['areas']) if (!Array.isArray(o.bld[k])) o.bld[k] = [];
+  if (!Array.isArray(o.nb.rows)) o.nb.rows = [];
+  if (!Array.isArray(o.split.parcels)) o.split.parcels = [];
+  if (!Array.isArray(o.split.plans)) o.split.plans = [];
+  [o.bld.areas, o.nb.rows, o.split.parcels].forEach(l => l.forEach(r => { if (!r.id) r.id = uid(); }));
+  return o;
+}
+let S;
+try { const raw = localStorage.getItem(STORE_KEY); S = raw ? normalize(JSON.parse(raw)) : sample(); } catch (e) { S = sample(); }
+const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} };
+const getPath = p => p.split('.').reduce((o, k) => o[k], S);
+const setPath = (p, v) => { const ks = p.split('.'), last = ks.pop(); ks.reduce((o, k) => o[k], S)[last] = v; };
+
+/* ===== DOM ===== */
+const $ = id => document.getElementById(id);
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const framed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+if (framed) document.querySelectorAll('[data-top-only]').forEach(el => { el.hidden = true; });
+
+function ensurePlans() {
+  const c = Math.min(40, int(S.split.count));
+  while (S.split.plans.length < c) S.split.plans.push({ name: planName(S.split.plans.length), lines: 0, markers: 0 });
+}
+
+function tierRow(list, r, i, labelPh) {
+  const hasArea = n(r.area) > 0, t = rowTier(r);
+  const opts = TIERS.map((lab, k) => `<option value="${k}"${k === t ? ' selected' : ''}>${lab}</option>`).join('');
+  return `<div class="row" data-list="${list}" data-i="${i}">
+    <input class="in wide" data-f="label" value="${esc(r.label)}" placeholder="${labelPh}" aria-label="說明">
+    <input class="in fill" type="number" min="0" step="any" inputmode="decimal" data-f="area" value="${esc(r.area)}" placeholder="面積" aria-label="面積">
+    <select class="in${hasArea ? '' : ' fill'}" data-f="tier" aria-label="面積級距"${hasArea ? ' disabled' : ''}>${opts}</select>
+    <input class="in fill" type="number" min="0" step="1" inputmode="numeric" data-f="qty" value="${esc(r.qty)}" aria-label="數量">
+    <button type="button" class="x" data-del aria-label="刪除此列">×</button>
+  </div>`;
+}
+function bldRow(r, i) {
+  return `<div class="row bld" data-list="bld" data-i="${i}">
+    <input class="in wide" data-f="label" value="${esc(r.label)}" placeholder="例：建號 101 第 1 層" aria-label="建號／層別">
+    <input class="in fill" type="number" min="0" step="any" inputmode="decimal" data-f="area" value="${esc(r.area)}" placeholder="面積" aria-label="面積">
+    <span class="out" data-out>${bldUnits(r.area)} 單位</span>
+    <button type="button" class="x" data-del aria-label="刪除此列">×</button>
+  </div>`;
+}
+const LISTS = {
+  bld: { arr: () => S.bld.areas, el: 'list_bld', row: bldRow, make: () => ({ id: uid(), label: '', area: '' }), empty: '尚無資料。每一建號的每一層（或每一個閉合區）新增一列。' },
+  nb: { arr: () => S.nb.rows, el: 'list_nb', row: (r, i) => tierRow('nb', r, i, '例：果樹區'), make: () => ({ id: uid(), label: '', area: '', tier: 0, qty: 1 }), empty: '尚無位置。' },
+  parcel: { arr: () => S.split.parcels, el: 'list_parcel', row: (r, i) => tierRow('parcel', r, i, '例：123 地號'), make: () => ({ id: uid(), label: '', area: '', tier: 0, qty: 1 }), empty: '尚無地號。' },
+};
+function renderList(key) {
+  const L = LISTS[key], a = L.arr();
+  $(L.el).innerHTML = a.length ? a.map(L.row).join('') : `<div class="empty">${L.empty}</div>`;
+}
+function renderPlans() {
+  ensurePlans();
+  const c = int(S.split.count);
+  $('plans').innerHTML = c ? S.split.plans.slice(0, c).map((p, i) => `
+    <div class="plan" data-plan="${i}">
+      <div class="plan-top"><span class="plan-badge">${esc((p.name || planName(i)).slice(0, 1))}</span><input class="in" data-pf="name" value="${esc(p.name)}" aria-label="方案名稱"></div>
+      <label class="pair"><span>線段數</span><input class="in fill" type="number" min="0" step="1" inputmode="numeric" data-pf="lines" value="${esc(p.lines)}"></label>
+      <label class="pair"><span>未埋界標界址點</span><input class="in fill" type="number" min="0" step="1" inputmode="numeric" data-pf="markers" value="${esc(p.markers)}"></label>
+      <div class="plan-foot"><span>本案 <b class="money" data-po="sub">0</b></span><span class="half">判決確定後 <span class="money" data-po="half">0</span></span></div>
+    </div>`).join('') : '<div class="empty">分割方案數量為 0，本次沒有分割方案費用。</div>';
+}
+function bindFields() {
+  document.querySelectorAll('[data-bind]').forEach(el => {
+    const v = getPath(el.dataset.bind);
+    if (el.type === 'checkbox') el.checked = !!v;
+    else if (el.type === 'radio') el.checked = el.value === v;
+    else el.value = v ?? '';
+  });
+}
+function renderAll() {
+  bindFields(); renderList('bld'); renderList('nb'); renderList('parcel'); renderPlans(); update();
+}
+
+function line(name, expr, amt) {
+  return `<div class="t-line${amt ? '' : ' zero'}"><span>${name}</span><span class="money">${fmt(amt)}</span><span class="expr">${expr}</span></div>`;
+}
+function warnings(c) {
+  const w = [];
+  if (c.uSum && !c.bPos) w.push(['有建物面積，但建物棟數為 0。第 4 條第 2 款的面積費是「另」計，通常同時要收位置費。', '']);
+  if (c.ptsUnits && !c.nbT.total && !c.waive) w.push(['有鑑定點數，但沒有填非屬建物位置的面積級距。', '']);
+  if (c.nbT.total && !c.pts && !c.waive) w.push(['有非屬建物位置，但鑑定點數為 0，施測費會是 0。', '']);
+  if (c.planCount && !c.pT.total) w.push(['已設定分割方案，但還沒填分割前地號，基本費是 0。', '']);
+  c.plans.forEach(p => { if (!p.lines) w.push([`${p.name} 線段數為 0。`, '']); });
+  if (S.nb.multi === 'perPlan' && !c.planCount) w.push(['非屬建物選了「各方案分別展示」，但分割方案數量為 0，施測費以 1 次計。', '']);
+  if (c.sheets) w.push(['製圖費沿用原試算表公式，相關規定未列依據，請確認費率。', 'info']);
+  return w;
+}
+function update() {
+  const c = calc(S);
+  $('s_bld').textContent = fmt(c.bldSub);
+  $('s_nb').textContent = fmt(c.nbSub);
+  $('s_draw').textContent = fmt(c.draw);
+  $('s_split').textContent = fmt(c.splitSub);
+  $('c_bpos').textContent = `${c.bPos} × 4,000 = ${fmt(c.bldPos)}`;
+  $('t_bld').textContent = `${S.bld.areas.length} 列 · ${c.uSum} 單位 · ${fmt(c.bldArea)} 元`;
+  $('t_nb').textContent = `${c.nbT.total} 個位置 · ${fmt(c.nbT.amount)} 元`;
+  $('t_parcel').textContent = `${c.pT.total} 筆 · ${fmt(c.pT.amount)} 元`;
+  $('c_npts').textContent = `⌈${c.pts}/5⌉ = ${c.ptsUnits} 單位${c.times > 1 ? ` × ${c.times} 案` : ''} → ${fmt(c.waive ? 0 : c.nbSurvey)}`;
+  $('c_napts').textContent = `${int(S.nb.areaPoints)} × 200 = ${fmt(c.nbArea)}`;
+  $('c_draw').textContent = `(${c.sheets} − 1) × 20 = ${fmt(c.draw)}`;
+  document.querySelectorAll('#list_bld [data-i]').forEach(r => { r.querySelector('[data-out]').textContent = c.units[+r.dataset.i] + ' 單位'; });
+  document.querySelectorAll('#plans [data-plan]').forEach(el => {
+    const p = c.plans[+el.dataset.plan]; if (!p) return;
+    el.querySelector('[data-po="sub"]').textContent = fmt(p.subtotal);
+    el.querySelector('[data-po="half"]').textContent = fmt(p.judgedHalf);
+  });
+
+  $('tot').textContent = fmt(c.total);
+  $('totUpper').textContent = toUpper(c.total);
+  $('sampleBar').hidden = !S.sample;
+
+  let h = `<div class="t-grp"><h4><span>建物</span><span class="money">${fmt(c.bldSub)}</span></h4>
+    ${line('位置費', `${c.bPos} 棟 × 4,000`, c.bldPos)}
+    ${line('面積費', `${c.uSum} 單位 × 1,000`, c.bldArea)}</div>`;
+  h += `<div class="t-grp"><h4><span>非屬建物</span><span class="money">${fmt(c.nbSub)}</span></h4>
+    ${line('位置・基本費', c.waive ? '依原表註記不計收' : (c.nbT.expr || '—'), c.nbBase)}
+    ${line('位置・施測費', c.waive ? '依原表註記不計收' : `${c.ptsUnits} 單位 × 1,000${c.times > 1 ? ` × ${c.times} 案` : ''}`, c.nbSurvey)}
+    ${line('面積費', `${int(S.nb.areaPoints)} 點 × 200`, c.nbArea)}</div>`;
+  h += `<div class="t-grp"><h4><span>製圖費</span><span class="money">${fmt(c.draw)}</span></h4>
+    ${line('製圖', `(${c.sheets} − 1) 張 × 20`, c.draw)}</div>`;
+  h += `<div class="t-grp"><h4><span>分割方案（${c.planCount} 案）</span><span class="money">${fmt(c.splitSub)}</span></h4>
+    ${!c.each && c.planCount ? line('基本費（僅收一次）', c.pT.expr || '—', c.splitBaseOnce) : ''}
+    ${c.plans.map(p => line(p.name, `${c.each ? `基本 ${fmt(p.base)} ＋ ` : ''}${p.lines} 線×500${p.markers ? ` ＋ ${p.markers} 點×200` : ''}`, p.subtotal)).join('')}</div>`;
+  if (c.urgentExtra) h += `<div class="t-urgent"><span>限期 15 日內・加倍</span><span class="money">＋${fmt(c.urgentExtra)}</span></div>`;
+  $('tbody').innerHTML = h;
+
+  const w = warnings(c);
+  $('warns').innerHTML = w.map(([t, k]) => `<div class="warn ${k}">${esc(t)}</div>`).join('');
+  $('warns').hidden = !w.length;
+
+  renderReport(c);
+  save();
+}
+
+/* ===== A4 報表 ===== */
+function renderReport(c) {
+  const m = S.meta;
+  const rows = [];
+  const tr = (cat, span, item, expr, amt, cls = '') => `<tr class="${cls}">${cat ? `<td class="cat" rowspan="${span}">${cat}</td>` : ''}<td>${item}</td><td class="expr">${expr}</td><td class="r">${fmt(amt)}</td></tr>`;
+  rows.push(tr('建物', 2, '位置費（附表二項次一，以整棟為單位）', `${c.bPos} 棟 × 4,000`, c.bldPos));
+  rows.push(tr('', 0, '面積費（每建號每層每 50 ㎡）', `${c.uSum} 單位 × 1,000`, c.bldArea));
+  rows.push(tr('非屬<br>建物', 3, '位置・基本費（依位置面積分級）', c.waive ? '依原表註記不計收' : (c.nbT.expr || '—'), c.nbBase));
+  rows.push(tr('', 0, '位置・施測費（鑑定點每 5 點一單位）', c.waive ? '依原表註記不計收' : `⌈${c.pts}÷5⌉=${c.ptsUnits} 單位 × 1,000${c.times > 1 ? ` × ${c.times} 案` : ''}`, c.nbSurvey));
+  rows.push(tr('', 0, '面積費（每折點）', `${int(S.nb.areaPoints)} 點 × 200`, c.nbArea));
+  rows.push(`<tr class="subtotal"><td colspan="3">現況測量費小計</td><td class="r">${fmt(c.fieldSub)}</td></tr>`);
+  if (c.planCount) {
+    const pr = [];
+    const lines = c.plans.reduce((a, p) => a + p.lines, 0), marks = c.plans.reduce((a, p) => a + p.markers, 0);
+    if (c.each) pr.push(['基本費（每案分別計收）', `(${c.pT.expr || '0'}) × ${c.planCount} 案`, c.pT.amount * c.planCount]);
+    else pr.push(['基本費（多項方案僅收一次）', c.pT.expr || '—', c.splitBaseOnce]);
+    pr.push([`施測費（${c.planCount} 案合計，明細見下表）`, `${lines} 線 × 500${marks ? ` ＋ ${marks} 點 × 200` : ''}`, c.plans.reduce((a, p) => a + p.survey, 0)]);
+    pr.forEach((r, i) => rows.push(tr(i ? '' : '分割<br>方案', pr.length, r[0], r[1], r[2])));
+    rows.push(`<tr class="subtotal"><td colspan="3">分割方案費小計（${c.planCount} 案）</td><td class="r">${fmt(c.splitSub)}</td></tr>`);
+  }
+  if (c.urgentExtra) rows.push(`<tr><td class="cat">加倍</td><td>限期 15 日內辦理（第 4 條第 2 項）</td><td class="expr">(${fmt(c.fieldSub)} ＋ ${fmt(c.splitSub)}) × 1</td><td class="r">${fmt(c.urgentExtra)}</td></tr>`);
+  rows.push(tr('雜項', 1, '製圖費', `(${c.sheets} − 1) 張 × 20`, c.draw));
+
+  const bldDetail = S.bld.areas.filter(a => n(a.area)).map((a, i) => `${esc(a.label || '第' + (i + 1) + '列')} ${n(a.area)}㎡→${bldUnits(a.area)}`).join('、');
+  const parcelDetail = S.split.parcels.map((r, i) => `${esc(r.label || '第' + (i + 1) + '筆')}${n(r.area) ? ' ' + n(r.area) + '㎡' : ''}（${TIERS[rowTier(r)]}×${rowQty(r)}）`).join('、');
+
+  const plansTable = c.planCount ? `<p class="cap">各分割方案明細</p>
+    <table><thead><tr><th>方案</th><th>線段</th><th>界址點</th><th>施測費</th><th>本次計收</th><th>判決確定後複丈（第 6 條半數，參考）</th></tr></thead><tbody>
+    ${c.plans.map(p => `<tr><td class="c">${esc(p.name)}</td><td class="r">${p.lines}</td><td class="r">${p.markers}</td><td class="r">${fmt(p.survey)}</td><td class="r">${fmt(p.subtotal)}</td><td class="r">(${fmt(c.pT.amount)} ＋ ${fmt(p.survey)}) ÷ 2 = ${fmt(p.judgedHalf)}</td></tr>`).join('')}
+    </tbody></table>` : '';
+
+  const dense = c.planCount > 8 || S.bld.areas.length > 12;
+  $('report').innerHTML = `<div class="rp${dense ? ' dense' : ''}">
+    <div class="rp-h"><h1>囑託測量收費試算表</h1><div class="meta">試算日期 ${esc(m.date)}${S.opt.urgent ? '<br><b>限期 15 日內辦理・加倍計收</b>' : ''}</div></div>
+    <div class="rp-info">
+      <div><b>囑託機關</b>${esc(m.court)}</div><div><b>來文字號</b>${esc(m.docNo)}</div><div><b>案號／股別</b>${esc(m.caseNo)}</div>
+      <div class="span3"><b>地段地號／標的</b>${esc(m.land)}</div>
+    </div>
+    <table><thead><tr><th>類別</th><th>項目</th><th>計算式</th><th style="width:24mm">金額（元）</th></tr></thead><tbody>${rows.join('')}</tbody></table>
+    <div class="rp-total"><span class="k">應收合計</span><span class="v">NT$ ${fmt(c.total)}</span><span class="u">${toUpper(c.total)}</span></div>
+    ${plansTable}
+    <ul class="rp-notes">
+      ${bldDetail ? `<li>建物面積明細：${bldDetail}</li>` : ''}
+      ${parcelDetail && c.planCount ? `<li>分割前地號：${parcelDetail}</li>` : ''}
+      <li>分割方案基本費：${c.each ? '每案分別計收（原試算表算法）' : '依第 4 條第 1 項第 1 款，多項分割方案基本費僅收一次，施測費分別計收'}。</li>
+      ${S.nb.multi === 'perPlan' ? '<li>非屬建物成果為多項方案：依內規(三)位置基本費收 1 次，施測費依方案數分別計收。</li>' : ''}
+      ${S.nb.multi === 'waive' ? '<li>非屬建物位置費依原試算表註記「多分割方案需展示則不必計收」未計收。</li>' : ''}
+      <li>依據：土地複丈費及建築改良物測量費收費標準第 4 條、第 6 條、附表一、附表二；114 年 11 月 4 日「受理囑託非屬建築物之位置與面積測量」收費方式會議紀錄。本表為試算，實際以登記機關核定為準。</li>
+    </ul>
+    <div class="rp-sign"><div>試算　${esc(m.handler)}</div><div>覆核</div><div>課長／主任</div></div>
+  </div>`;
+}
+
+/* ===== 事件 ===== */
+const form = $('form');
+form.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.bind) {
+    const v = t.type === 'checkbox' ? t.checked : t.value;
+    setPath(t.dataset.bind, v);
+    if (t.dataset.bind === 'split.count') { S.split.count = Math.min(40, int(v)); renderPlans(); }
+    update(); return;
+  }
+  const row = t.closest('[data-list]');
+  if (row && t.dataset.f) {
+    const r = LISTS[row.dataset.list].arr()[+row.dataset.i];
+    r[t.dataset.f] = t.value;
+    if (t.dataset.f === 'area' && row.dataset.list !== 'bld') {
+      const sel = row.querySelector('[data-f="tier"]'), has = n(t.value) > 0;
+      sel.disabled = has; sel.classList.toggle('fill', !has);
+      if (has) { r.tier = tierOf(n(t.value)); sel.value = r.tier; }
+    }
+    update(); return;
+  }
+  const plan = t.closest('[data-plan]');
+  if (plan && t.dataset.pf) {
+    S.split.plans[+plan.dataset.plan][t.dataset.pf] = t.value;
+    if (t.dataset.pf === 'name') plan.querySelector('.plan-badge').textContent = (t.value || planName(+plan.dataset.plan)).slice(0, 1);
+    update();
+  }
+});
+form.addEventListener('change', e => { if (e.target.type === 'radio' && e.target.dataset.bind) { setPath(e.target.dataset.bind, e.target.value); update(); } });
+form.addEventListener('click', e => {
+  const st = e.target.closest('[data-step]');
+  if (st) {
+    const inp = $(st.dataset.for);
+    const max = inp.max ? +inp.max : Infinity;
+    inp.value = Math.min(max, Math.max(0, int(inp.value) + Number(st.dataset.step)));
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
+  const add = e.target.closest('[data-add]');
+  if (add) {
+    const k = add.dataset.add; LISTS[k].arr().push(LISTS[k].make()); renderList(k); update();
+    const rows = $(LISTS[k].el).querySelectorAll('[data-i]'); rows[rows.length - 1]?.querySelector('input')?.focus();
+    return;
+  }
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    const row = del.closest('[data-list]'); const k = row.dataset.list;
+    LISTS[k].arr().splice(+row.dataset.i, 1); renderList(k); update();
+  }
+});
+
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1800); }
+
+let clearArmed = 0;
+$('btnClear').addEventListener('click', e => {
+  if (Date.now() - clearArmed > 3000) { clearArmed = Date.now(); e.currentTarget.textContent = '再按一次確認清除'; setTimeout(() => { $('btnClear').textContent = '全部清除'; }, 3000); return; }
+  clearArmed = 0; e.currentTarget.textContent = '全部清除';
+  S = blank(); openFolds(); renderAll(); toast('已清除');
+});
+$('btnStartBlank').addEventListener('click', () => { S = blank(); openFolds(); renderAll(); toast('已清空，可以開始填寫'); });
+$('btnSample').addEventListener('click', () => { S = sample(); renderAll(); toast('已載入範例'); });
+// 列印前量報表高度，超過一張 A4 可印範圍（約 275mm）就整體縮小
+function fitReport() {
+  const rp = $('report'), inner = rp.firstElementChild; if (!inner) return;
+  inner.style.zoom = '';
+  rp.style.cssText = 'display:block;position:absolute;left:-9999px;top:0;width:186mm;visibility:hidden';
+  const mm = rp.offsetWidth / 186, h = inner.offsetHeight / mm;
+  rp.style.cssText = '';
+  if (h > 272) inner.style.zoom = (272 / h).toFixed(3);
+}
+window.addEventListener('beforeprint', () => { update(); fitReport(); });
+$('btnPrint').addEventListener('click', () => window.print());
+$('btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `收費試算_${(S.meta.caseNo || S.meta.date || '未命名').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('fileImport').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { try { S = normalize(JSON.parse(rd.result)); S.sample = false; renderAll(); toast('已匯入'); } catch (err) { toast('檔案格式不對，請選本工具匯出的 .json 檔'); } };
+  rd.readAsText(f); e.target.value = '';
+});
+$('btnCopy').addEventListener('click', () => {
+  const c = calc(S);
+  const L = [`囑託測量收費試算 ${S.meta.caseNo || ''}`.trim(),
+    `建物 ${fmt(c.bldSub)}（位置 ${fmt(c.bldPos)}、面積 ${fmt(c.bldArea)}）`,
+    `非屬建物 ${fmt(c.nbSub)}（基本 ${fmt(c.nbBase)}、施測 ${fmt(c.nbSurvey)}、面積 ${fmt(c.nbArea)}）`,
+    `製圖費 ${fmt(c.draw)}`,
+    `分割方案 ${fmt(c.splitSub)}${c.splitBaseOnce ? `（基本費一次 ${fmt(c.splitBaseOnce)}）` : ''}`,
+    ...c.plans.map(p => `  ${p.name} ${fmt(p.subtotal)}（判決確定後半數 ${fmt(p.judgedHalf)}）`),
+    c.urgentExtra ? `限期加倍 ＋${fmt(c.urgentExtra)}` : '',
+    `應收合計 ${fmt(c.total)} 元（${toUpper(c.total)}）`].filter(Boolean).join('\n');
+  const done = () => toast('明細已複製');
+  try { navigator.clipboard.writeText(L).then(done, () => fallbackCopy(L)); } catch (e) { fallbackCopy(L); }
+});
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('明細已複製'); } catch (e) { toast('無法自動複製，請手動選取'); }
+  ta.remove();
+}
+function openFolds() { ['fold_bld', 'fold_nb', 'fold_parcel'].forEach(id => { $(id).open = true; }); }
+// 有任何使用者輸入後就不再是範例
+form.addEventListener('input', () => { if (S.sample) { S.sample = false; $('sampleBar').hidden = true; save(); } }, true);
+
+renderAll();
+</script>
+</body>
+</html>
