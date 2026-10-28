@@ -92,19 +92,46 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .news { background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r); margin-bottom: 18px; overflow: hidden; }
 .news-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px; background: var(--accent-soft); }
 .news-h h2 { margin: 0; font: 700 18px/1.3 var(--font-display); }
-.news-b { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 20px; padding: 14px 18px 18px; }
-@media (max-width: 760px) { .news-b { grid-template-columns: minmax(0, 1fr); } }
 .news h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 500; letter-spacing: .08em; }
-.feat { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 14px; }
-.log { margin-bottom: 12px; }
-.log:last-child { margin-bottom: 0; }
-.log-v { font-weight: 700; font-size: 14px; }
-.log-v .num { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 8px; }
-.log ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 13.5px; }
-.log li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+
+/* ---------- 版本紀錄／新版通知 ---------- */
+.dlg { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 0;
+  width: min(640px, calc(100vw - 32px)); max-height: 84vh; box-shadow: 0 24px 80px -20px rgba(0, 0, 0, .6); }
+.dlg::backdrop { background: rgba(5, 9, 12, .62); backdrop-filter: blur(3px); }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 20px;
+  border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.dlg-head h2 { margin: 0; font: 700 18px/1.3 var(--font-display); }
+.dlg-body { padding: 18px 20px 20px; display: grid; gap: 16px; }
+.dlg-foot { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; padding: 12px 20px 16px;
+  border-top: 1px solid var(--line); position: sticky; bottom: 0; background: var(--surface); }
+.row-gap { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+a.btn { text-decoration: none; }
+.vnew { border: 1px solid var(--seal); border-radius: 12px; padding: 14px 16px; display: grid; gap: 8px;
+  background: linear-gradient(180deg, var(--seal-soft), transparent 80%); }
+.vnew .vh { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.badge-new { background: var(--seal); color: var(--surface); font: 700 11px/1 var(--font-num); letter-spacing: .14em; border-radius: 4px; padding: 4px 7px; align-self: center; }
+.vnew .vv { font: 600 22px/1 var(--font-num); }
+.vnew .vd { font-size: 12.5px; color: var(--muted); }
+.vnew h3 { margin: 0; font-size: 16px; }
+.vitems { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13.5px; }
+.vitems li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
 .kind { font-size: 11.5px; border-radius: 4px; padding: 0 6px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
 .kind.new { border-color: var(--accent); color: var(--accent); }
-.log.old { opacity: .75; }
+.vcheck { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); }
+.feat { margin: 0; padding-left: 1.2em; display: grid; gap: 3px; font-size: 13.5px; }
+.dlg h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: .1em; }
+.tl { list-style: none; margin: 0; padding: 4px 0 0 26px; position: relative; display: grid; gap: 14px; }
+.tl::before { content: ""; position: absolute; left: 8px; top: 10px; bottom: 6px; width: 2px; background: linear-gradient(var(--accent), var(--line) 70%, transparent); }
+.tl > li { position: relative; }
+.tl > li::before { content: ""; position: absolute; left: -23px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+.tl > li.cur::before { background: var(--seal); border-color: var(--seal); box-shadow: 0 0 0 4px var(--seal-soft); }
+.tl details > summary { cursor: pointer; list-style: none; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.tl details > summary::-webkit-details-marker { display: none; }
+.tl-ver { font: 600 14px var(--font-num); color: var(--accent); }
+.tl-title { font-weight: 600; font-size: 14px; }
+.tl-date { margin-left: auto; font-size: 12px; color: var(--muted); font-family: var(--font-num); }
+.tl details .vitems { margin-top: 6px; color: var(--muted); }
+.ustep { margin: 4px 0 0; padding-left: 20px; font-size: 13.5px; display: grid; gap: 4px; }
 
 /* ---------- 相關規定 ---------- */
 .rules-b { padding: 6px 18px 18px; display: grid; gap: 18px; max-width: 980px; }
@@ -327,7 +354,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     <div class="tools">
       <button class="btn ghost" id="btnTheme" type="button">淺色模式</button>
       <button class="btn ghost" id="btnRules" type="button" aria-expanded="false" aria-controls="rules">相關規定</button>
-      <button class="btn ghost" id="btnNews" type="button">更新內容<span class="news-dot" id="newsDot" hidden></span></button>
+      <button class="btn ghost" id="btnNews" type="button" aria-haspopup="dialog"><span id="verTag"></span>・更新內容<span class="news-dot" id="newsDot" hidden></span></button>
       <button class="btn ghost" id="btnSample" type="button">載入範例</button>
       <button class="btn ghost danger" id="btnClear" type="button">全部清除</button>
       <button class="btn ghost" id="btnExport" type="button" data-top-only>匯出檔案</button>
@@ -421,14 +448,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
         </ol>
       </article>
       <p class="fn">本頁內容轉錄自原試算表「相關規定」工作表，供查閱參考；條文以全國法規資料庫公告為準。</p>
-    </div>
-  </section>
-
-  <section class="news" id="news" hidden aria-labelledby="newsTitle">
-    <div class="news-h"><h2 id="newsTitle"></h2><button class="btn small" type="button" id="btnNewsClose">知道了</button></div>
-    <div class="news-b">
-      <div><h3>目前版本特點</h3><ul class="feat" id="featList"></ul></div>
-      <div><h3>更新紀錄</h3><div id="logList"></div></div>
     </div>
   </section>
 
@@ -667,9 +686,178 @@ button, input, select, textarea { font: inherit; color: inherit; }
   </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
+
+<dialog id="vdlg" class="dlg" aria-labelledby="vTitle">
+  <div class="dlg-head"><h2 id="vTitle">版本更新紀錄</h2><button class="btn small" type="button" data-close>關閉</button></div>
+  <div class="dlg-body" id="vBody"></div>
+</dialog>
+
+<dialog id="udlg" class="dlg" aria-labelledby="uTitle">
+  <div class="dlg-head"><h2 id="uTitle">有新版本可以下載</h2><button class="btn small" type="button" data-close>稍後再說</button></div>
+  <div class="dlg-body" id="uBody"></div>
+  <div class="dlg-foot">
+    <button class="btn small ghost" type="button" id="uSkip">略過這個版本</button>
+    <div class="row-gap">
+      <button class="btn" type="button" id="uBackup">先匯出備份</button>
+      <a class="btn primary" id="uGet" href="#" target="_blank" rel="noopener">下載新版</a>
+    </div>
+  </div>
+</dialog>
 </div>
 
 <div id="report"></div>
+
+<!-- 版本時間軸：最新版本放最上面。發布新版時在 versions 最前面加一筆，再執行 scripts/build.sh 產生 version.json -->
+<script type="application/json" id="changelogData">
+{
+ "features": [
+  "開啟時自動檢查新版本，有新版會跳出通知視窗",
+  "分割方案數量自訂，填幾案就產生幾張方案卡，名稱可改",
+  "邊填邊算，每一項都列出計算式，漏填會跳出提醒",
+  "收費項目按需加入，畫面只留本案用得到的區塊",
+  "可印一張 A4 總表，也可印各方案分算明細（每案一張），供內部參考",
+  "判決確定分割獨立計算（第 6 條半數），可從分割方案一鍵帶入",
+  "右上角「相關規定」可隨時查閱條文與附表",
+  "資料自動保存，可匯出、匯入 .json 交接案件"
+ ],
+ "versions": [
+  {
+   "version": "1.3.0",
+   "date": "2026-10-28",
+   "title": "自動檢查更新、版本時間軸",
+   "items": [
+    [
+     "新增",
+     "開啟時自動檢查 GitHub 上的新版本，有新版會跳出通知視窗，列出更新重點與更新步驟。"
+    ],
+    [
+     "新增",
+     "通知視窗可先匯出備份、稍後再說，或略過這個版本。"
+    ],
+    [
+     "新增",
+     "「更新內容」改為版本時間軸，最新版本在最上面，可隨時按「檢查更新」。"
+    ],
+    [
+     "調整",
+     "更新到新版後，「更新內容」旁出現紅點，看過就消失。"
+    ]
+   ]
+  },
+  {
+   "version": "1.2.2",
+   "date": "2026-10-21",
+   "title": "深色介面",
+   "items": [
+    [
+     "調整",
+     "介面預設改為深色，降低刺眼；右上角可切換淺色模式，會記住選擇。"
+    ],
+    [
+     "調整",
+     "收費項目五個按鈕排成一列，不再有單獨掉到下一行的格子。"
+    ]
+   ]
+  },
+  {
+   "version": "1.2.1",
+   "date": "2026-10-21",
+   "title": "總表拿掉核章欄",
+   "items": [
+    [
+     "調整",
+     "A4 總表拿掉核章欄（報表為內部參考用），試算人改印在報表右上角。"
+    ]
+   ]
+  },
+  {
+   "version": "1.2.0",
+   "date": "2026-10-21",
+   "title": "收費項目按需加入、判決確定分割、相關規定",
+   "items": [
+    [
+     "新增",
+     "「收費項目」：建物、非屬建物、製圖費、分割方案、判決確定分割預設隱藏，按需加入。"
+    ],
+    [
+     "新增",
+     "「判決確定分割」獨立版面：依第 6 條（基本費＋施測費）半數計收，可從分割方案帶入。"
+    ],
+    [
+     "新增",
+     "右上角「相關規定」：第 4、6 條、附表一、附表二、非屬建物收費內規。"
+    ],
+    [
+     "調整",
+     "第一次開啟為空白畫面；需要範例時按「載入範例」。"
+    ],
+    [
+     "調整",
+     "右側合計只列有金額的項目，總表也不列 0 元的項目。"
+    ],
+    [
+     "調整",
+     "各方案分算明細拿掉核章欄；方案卡與報表不再附判決確定參考金額。"
+    ]
+   ]
+  },
+  {
+   "version": "1.1.0",
+   "date": "2026-10-21",
+   "title": "各方案分算明細",
+   "items": [
+    [
+     "新增",
+     "「列印各方案分算明細」：每個分割方案各印一張 A4，各張加總等於總表合計。"
+    ],
+    [
+     "新增",
+     "分算設定：基本費由哪一案收取（預設第一案）；共同費用可併入該案或另列一張。"
+    ],
+    [
+     "調整",
+     "建物位置費改以「棟數／閉合區數」計，同一棟有多個閉合區時每區另計。"
+    ],
+    [
+     "調整",
+     "建物面積費改為每層每閉合區分算，不再強調建號。"
+    ]
+   ]
+  },
+  {
+   "version": "1.0.0",
+   "date": "2026-10-21",
+   "title": "網頁版上線",
+   "items": [
+    [
+     "新增",
+     "取代 Excel 試算表 v2.1，甲乙丙三案改為自訂分割方案數量。"
+    ],
+    [
+     "調整",
+     "分割方案基本費僅收一次（第 4 條第 1 項第 1 款）。"
+    ],
+    [
+     "新增",
+     "非屬建物「展示在幾個方案上」，基本費一次、施測費依方案數計收（內規(三)）。"
+    ],
+    [
+     "調整",
+     "面積級距改下拉選單，填面積自動判斷；需填欄位常駐展開。"
+    ],
+    [
+     "新增",
+     "限期 15 日內加倍（製圖費除外）、未埋界標界址點加繳。"
+    ],
+    [
+     "新增",
+     "一張 A4 總表，含新臺幣大寫。"
+    ]
+   ]
+  }
+ ]
+}
+</script>
 
 <script>
 'use strict';
@@ -691,53 +879,10 @@ const RATES = {
 const TIERS = ['未滿 200 ㎡', '200 以上未滿 1,000 ㎡', '1,000 以上未滿 10,000 ㎡', '10,000 ㎡ 以上'];
 const PLAN_NAMES = '甲乙丙丁戊己庚辛壬癸';
 const STORE_KEY = 'survey-fee-calc.v1';
-const VERSION = 'v1.2.2（2026-10-21）';
-/* 更新紀錄：改版時在最上面加一筆，並同步更新 CHANGELOG.md */
-const FEATURES = [
-  '分割方案數量自訂，填幾案就產生幾張方案卡，名稱可改',
-  '邊填邊算，每一項都列出計算式，漏填會跳出提醒',
-  '收費項目按需加入，畫面只留本案用得到的區塊',
-  '可印一張 A4 總表，也可印各方案分算明細（每案一張），供內部參考',
-  '判決確定分割獨立計算（第 6 條半數），可從分割方案一鍵帶入',
-  '右上角「相關規定」可隨時查閱條文與附表',
-  '多項方案基本費只收一次，預設由第一案收取，可改',
-  '每個區塊標明法規依據，費率集中在 RATES 一處修改',
-  '資料自動保存，可匯出、匯入 .json 交接案件',
-];
-const CHANGELOG = [
-  { ver: 'v1.2.2', date: '2026-10-21', items: [
-    ['調整', '介面預設改為深色，降低刺眼；右上角可切換淺色模式，會記住選擇。'],
-    ['調整', '收費項目五個按鈕排成一列，不再有單獨掉到下一行的格子。'],
-  ] },
-  { ver: 'v1.2.1', date: '2026-10-21', items: [
-    ['調整', 'A4 總表拿掉核章欄（報表為內部參考用），試算人改印在報表右上角。'],
-  ] },
-  { ver: 'v1.2', date: '2026-10-21', items: [
-    ['新增', '「收費項目」：建物、非屬建物、製圖費、分割方案、判決確定分割預設隱藏，按需加入。'],
-    ['調整', '第一次開啟為空白畫面；需要範例時按「載入範例」。'],
-    ['新增', '「判決確定分割」獨立版面：依第 6 條（基本費＋施測費）半數計收，可從分割方案帶入。'],
-    ['新增', '右上角「相關規定」：第 4、6 條、附表一、附表二、非屬建物收費內規。'],
-    ['調整', '右側合計只列有金額的項目，總表也不列 0 元的項目。'],
-    ['調整', '各方案分算明細拿掉核章欄；方案卡與報表不再附判決確定參考金額。'],
-    ['調整', '更新內容改為紅點提示，不再自動展開。'],
-  ] },
-  { ver: 'v1.1', date: '2026-10-21', items: [
-    ['新增', '「列印各方案分算明細」：每個分割方案各印一張 A4，各張加總等於總表合計。'],
-    ['新增', '分算設定：基本費由哪一案收取（預設第一案）；共同費用可併入該案或另列一張。'],
-    ['調整', '建物位置費改以「棟數／閉合區數」計，同一棟有多個閉合區時每區另計。'],
-    ['調整', '建物面積費改為每層每閉合區分算，不再強調建號。'],
-    ['新增', '更新內容面板與版本標示。'],
-  ] },
-  { ver: 'v1.0', date: '2026-10-21', items: [
-    ['新增', '取代 Excel 試算表 v2.1，甲乙丙三案改為自訂分割方案數量。'],
-    ['調整', '分割方案基本費僅收一次（第 4 條第 1 項第 1 款）。'],
-    ['新增', '非屬建物「展示在幾個方案上」，基本費一次、施測費依方案數計收（內規(三)）。'],
-    ['調整', '非屬建物統一用基本費、施測費、面積費。'],
-    ['調整', '面積級距改下拉選單，填面積自動判斷；需填欄位常駐展開。'],
-    ['新增', '限期 15 日內加倍（製圖費除外）、未埋界標界址點加繳、判決確定後半數參考。'],
-    ['新增', '一張 A4 總表，含新臺幣大寫與簽章欄。'],
-  ] },
-];
+/* 版本資料放在下方 <script id="changelogData"> 的 JSON，scripts/build.sh 會據此產生 version.json */
+const CL = JSON.parse(document.getElementById('changelogData').textContent);
+const APP_VERSION = CL.versions[0].version;
+const VERSION = `v${APP_VERSION}（${CL.versions[0].date}）`;
 
 /* ===== 純計算 ===== */
 const n = v => { const x = Number(v); return Number.isFinite(x) && x > 0 ? x : 0; };
@@ -1242,13 +1387,15 @@ window.addEventListener('beforeprint', () => { update(); fitReport(); });
 window.addEventListener('afterprint', () => { if (printMode !== 'summary') { printMode = 'summary'; update(); } });
 $('btnPrint').addEventListener('click', () => { printMode = 'summary'; window.print(); });
 $('btnPrintPlans').addEventListener('click', () => { printMode = 'plans'; window.print(); });
-$('btnExport').addEventListener('click', () => {
+function exportCase() {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `收費試算_${(S.meta.caseNo || S.meta.date || '未命名').replace(/[\\/:*?"<>|]/g, '_')}.json`;
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-});
+  toast('已匯出 .json 備份');
+}
+$('btnExport').addEventListener('click', exportCase);
 $('fileImport').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   const rd = new FileReader();
@@ -1287,26 +1434,110 @@ $('btnTheme').addEventListener('click', () => {
   try { localStorage.setItem('survey-fee-calc.theme', light ? 'light' : 'dark'); } catch (e) {}
   themeLabel();
 });
-$('newsTitle').textContent = `${VERSION.split('（')[0]} 更新內容`;
-$('featList').innerHTML = FEATURES.map(f => `<li>${esc(f)}</li>`).join('');
-$('logList').innerHTML = CHANGELOG.map((v, i) => `<div class="log${i ? ' old' : ''}"><div class="log-v">${v.ver}${i ? '' : '（目前版本）'}<span class="num">${v.date}</span></div><ul>${v.items.map(([k, t]) => `<li><span class="kind${k === '新增' ? ' new' : ''}">${k}</span><span>${esc(t)}</span></li>`).join('')}</ul></div>`).join('');
-const NEWS_KEY = 'survey-fee-calc.seen';
+/* ===== 版本紀錄與自動檢查更新 ===== */
+// 下載的單檔版讀 GitHub 公開倉庫的 version.json；放在 GitHub Pages 上時讀同站的 version.json
+const REPO = 'gn01918004-hub/calculator';
+const UPDATE_URL = `https://raw.githubusercontent.com/${REPO}/HEAD/version.json`;
+const DOWNLOAD_URL = `https://github.com/${REPO}/tree/HEAD/dist`;
+const ON_WEB = /^https?:$/.test(location.protocol) && location.hostname.endsWith('github.io');
+const NEWS_KEY = 'survey-fee-calc.seen', SKIP_KEY = 'survey-fee-calc.updateSkip';
+const vcmp = (a, b) => {
+  const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+  for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d; }
+  return 0;
+};
+const itemLi = it => Array.isArray(it)
+  ? `<li><span class="kind${it[0] === '新增' ? ' new' : ''}">${esc(it[0])}</span><span>${esc(it[1])}</span></li>`
+  : `<li><span class="kind">・</span><span>${esc(it)}</span></li>`;
+const vnew = (v, date, note, title, items) => `
+  <section class="vnew">
+    <div class="vh"><span class="badge-new">NEW</span><span class="vv">v${esc(v)}</span><span class="vd">${esc(date || '')}・${note}</span></div>
+    <h3>${esc(title)}</h3>
+    ${items && items.length ? `<ul class="vitems">${items.map(itemLi).join('')}</ul>` : ''}
+  </section>`;
+const dlgOpen = d => { try { d.showModal(); } catch (e) { d.setAttribute('open', ''); } };
+const dlgClose = d => { try { d.close(); } catch (e) { d.removeAttribute('open'); } };
+
+$('verTag').textContent = 'v' + APP_VERSION;
 let seen = ''; try { seen = localStorage.getItem(NEWS_KEY) || ''; } catch (e) {}
-if (seen !== VERSION) $('newsDot').hidden = false;
-$('btnNews').addEventListener('click', () => {
-  $('news').hidden = !$('news').hidden;
-  if (!$('news').hidden) { $('rules').hidden = true; $('btnRules').setAttribute('aria-expanded', 'false'); $('newsDot').hidden = true; try { localStorage.setItem(NEWS_KEY, VERSION); } catch (e) {} }
+if (seen !== APP_VERSION) $('newsDot').hidden = false;
+
+function openVer() {
+  const [now, ...past] = CL.versions;
+  $('vBody').innerHTML = vnew(now.version, now.date, '目前版本', '本版重點：' + now.title, now.items) + `
+    <div class="vcheck"><button class="btn small" type="button" id="vCheck">檢查更新</button><span id="vCheckMsg">開啟時會自動檢查</span></div>
+    <div><h4>目前版本特點</h4><ul class="feat">${CL.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul></div>
+    <div><h4>版本時間軸</h4><ol class="tl">
+      <li class="cur"><div class="row-gap"><span class="tl-ver">v${esc(now.version)}</span><span class="tl-title">${esc(now.title)}</span><span class="tl-date">${esc(now.date)}</span></div></li>
+      ${past.map((r, i) => `<li><details${i === 0 ? ' open' : ''}><summary><span class="tl-ver">v${esc(r.version)}</span><span class="tl-title">${esc(r.title)}</span><span class="tl-date">${esc(r.date)}</span></summary>
+        <ul class="vitems">${r.items.map(itemLi).join('')}</ul></details></li>`).join('')}
+    </ol></div>`;
+  if ($('udlg').open) dlgClose($('udlg'));
+  dlgOpen($('vdlg'));
+  $('newsDot').hidden = true;
+  try { localStorage.setItem(NEWS_KEY, APP_VERSION); } catch (e) {}
+}
+
+let updInfo = null;
+const shownUpd = new Set(); // 同一次開啟中，每個版本只自動跳出一次
+async function checkUpdate(manual) {
+  const say = t => { if ($('vCheckMsg')) $('vCheckMsg').textContent = t; if (manual) toast(t); };
+  if (framed) { if (manual) say('預覽畫面無法檢查更新，請用下載的檔案或網頁版開啟'); return; }
+  if (manual) say('檢查中…');
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const res = await fetch(`${ON_WEB ? 'version.json' : UPDATE_URL}?t=${Date.now()}`, { cache: 'no-store', signal: ctl.signal });
+    if (!res.ok) throw new Error(res.status);
+    const info = await res.json();
+    if (!info || !info.version) throw new Error('bad');
+    let skipped = null; try { skipped = localStorage.getItem(SKIP_KEY); } catch (e) {}
+    if (vcmp(info.version, APP_VERSION) > 0) {
+      if (manual) showUpdate(info);
+      else if (skipped !== info.version && !shownUpd.has(info.version)) { shownUpd.add(info.version); showUpdate(info); }
+      say(`有新版本 v${info.version}`);
+    } else say(`目前已是最新版本 v${APP_VERSION}`);
+  } catch (e) {
+    say('無法檢查更新，請確認網路連線後再試');
+  } finally { clearTimeout(timer); }
+}
+
+function showUpdate(info) {
+  updInfo = info;
+  const steps = ON_WEB
+    ? ['建議先按「先匯出備份」保存目前的資料', '按「立即更新」重新載入頁面，原本的資料會保留']
+    : ['建議先按「先匯出備份」保存目前的資料', '按「下載新版」，在 GitHub 頁面按下載鍵，取得新的 .html 檔', '用新檔取代舊檔，用同一個瀏覽器開啟，原本的資料會保留'];
+  $('uBody').innerHTML = vnew(info.version, info.date, `你目前使用 v${APP_VERSION}`, info.title || '新版本', info.items) +
+    `<div><h4>更新方式</h4><ol class="ustep">${steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>`;
+  const get = $('uGet');
+  if (ON_WEB) { get.textContent = '立即更新'; get.href = `${location.pathname}?v=${encodeURIComponent(info.version)}`; get.removeAttribute('target'); }
+  else {
+    get.textContent = '下載新版';
+    get.href = String(info.download || '').startsWith(`https://github.com/${REPO}/`) ? info.download : DOWNLOAD_URL;
+    get.target = '_blank';
+  }
+  $('uBackup').hidden = framed;
+  if ($('vdlg').open) dlgClose($('vdlg'));
+  if (!$('udlg').open) dlgOpen($('udlg'));
+}
+
+$('btnNews').addEventListener('click', openVer);
+$('vBody').addEventListener('click', e => { if (e.target.id === 'vCheck') checkUpdate(true); });
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => {
+  if (e.target.closest('[data-close]') || e.target === d) dlgClose(d); // 按關閉或點背景
+}));
+$('uSkip').addEventListener('click', () => {
+  try { localStorage.setItem(SKIP_KEY, updInfo.version); } catch (e) {}
+  dlgClose($('udlg')); toast(`已略過 v${updInfo.version}，有更新的版本時會再通知`);
 });
+$('uBackup').addEventListener('click', exportCase);
+setTimeout(() => checkUpdate(false), 1200);
+
 $('btnRules').addEventListener('click', () => {
   const open = $('rules').hidden;
   $('rules').hidden = !open; $('btnRules').setAttribute('aria-expanded', String(open));
-  if (open) { $('news').hidden = true; $('rules').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  if (open) $('rules').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 $('btnRulesClose').addEventListener('click', () => { $('rules').hidden = true; $('btnRules').setAttribute('aria-expanded', 'false'); });
-$('btnNewsClose').addEventListener('click', () => {
-  $('news').hidden = true; $('newsDot').hidden = true;
-  try { localStorage.setItem(NEWS_KEY, VERSION); } catch (e) {}
-});
 renderAll();
 </script>
 </body>
