@@ -27,8 +27,20 @@ name="囑託測量收費試算_v${ver}"
 rm -rf dist && mkdir -p "dist/${name}"
 cp index.html "dist/${name}.html"
 cp index.html "dist/${name}/${name}.html"
-cp docs/使用說明.txt "dist/${name}/使用說明.txt"
+# 加 UTF-8 BOM，舊版 Windows 記事本才不會亂碼
+{ printf '\xEF\xBB\xBF'; cat docs/使用說明.txt; } > "dist/${name}/使用說明.txt"
 cp docs/規定與計算邏輯檢查.md "dist/${name}/規定與計算邏輯檢查.md"
 cp CHANGELOG.md "dist/${name}/更新日誌.md"
-(cd dist && zip -qr "${name}.zip" "${name}" && rm -rf "${name}")
+# 用 Python 打包：中文檔名會標記為 UTF-8，Windows 檔案總管才能正確顯示與解壓縮
+python3 - "dist/${name}" <<'PY'
+import os, sys, zipfile
+src = sys.argv[1]
+base = os.path.dirname(src)
+with zipfile.ZipFile(src + '.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+    for root, _, files in os.walk(src):
+        for f in sorted(files):
+            full = os.path.join(root, f)
+            z.write(full, os.path.relpath(full, base))
+PY
+rm -rf "dist/${name}"
 ls -l dist version.json
