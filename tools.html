@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>地政規費工具</title>
+<meta name="description" content="囑託測量收費試算、共有物分割複丈費清冊">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap">
+<style>
+/* 與兩支工具相同的地籍圖色系：預設深色，可沿用計算器的淺色設定 */
+:root {
+  --paper: #11181d; --grid: #172128; --surface: #172229; --surface-2: #1c2830;
+  --ink: #d9e2e7; --muted: #8fa0ab; --line: #2b3a44; --accent: #72b4d4; --accent-soft: #1c3442; --seal: #e06a5f;
+  --font-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --paper: #eef3f2; --grid: #dbe5e4; --surface: #ffffff; --surface-2: #f6f9f9;
+  --ink: #17293a; --muted: #5a6b78; --line: #cfdadd; --accent: #1d5b78; --accent-soft: #e2eef3; --seal: #b3302a;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; color: var(--ink); font: 15px/1.7 var(--font-body);
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 48px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 900 clamp(28px, 4.5vw, 40px)/1.2 var(--font-display); margin: 0 0 6px; letter-spacing: .04em; }
+.lead { color: var(--muted); margin: 0 0 28px; max-width: 60ch; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+.card { display: grid; gap: 10px; align-content: start; padding: 20px 22px 22px; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; transition: border-color .15s, transform .15s; }
+.card:hover, .card:focus-visible { border-color: var(--accent); transform: translateY(-2px); outline: none; }
+.card h2 { margin: 0; font: 700 21px/1.3 var(--font-display); }
+.card .who { font-size: 13px; color: var(--accent); }
+.card ul { margin: 0; padding-left: 1.2em; color: var(--muted); font-size: 14px; }
+.card .go { margin-top: 4px; font-weight: 700; color: var(--accent); }
+.when { margin-top: 28px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.when h2 { margin: 0 0 6px; font: 700 17px/1.4 var(--font-display); }
+.when p { margin: 4px 0; color: var(--muted); font-size: 14px; }
+.foot { margin-top: 28px; color: var(--muted); font-size: 12.5px; }
+.foot a { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+</style>
+<script>try { if (localStorage.getItem('survey-fee-calc.theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}</script>
+</head>
+<body>
+<main class="wrap">
+  <h1>地政規費工具</h1>
+  <p class="lead">法院囑託與共有物分割相關的收費試算。兩支工具都可離線使用，資料只存在自己電腦的瀏覽器。</p>
+
+  <div class="cards">
+    <a class="card" href="index.html">
+      <span class="who">法院或行政執行分署囑託時</span>
+      <h2>囑託測量收費試算</h2>
+      <ul>
+        <li>現況測量：建物位置費、面積費</li>
+        <li>非屬建物：基本費、施測費、面積費</li>
+        <li>共有物分割方案：基本費一次、各方案施測費</li>
+        <li>A4 總表、各方案分算明細</li>
+      </ul>
+      <span class="go">開啟 →</span>
+    </a>
+    <a class="card" href="https://gn01918004-hub.github.io/courtPartition-/" target="_blank" rel="noopener">
+      <span class="who">判決確定、共有人申請分割時</span>
+      <h2>共有物分割複丈費清冊</h2>
+      <ul>
+        <li>依分割後筆數均分規費，再依持分算到每個人</li>
+        <li>第 6 條半數計收、確定界址點費用</li>
+        <li>可貼上判決書主文辨識姓名與持分</li>
+        <li>列印分擔清冊 1 式 2 份</li>
+      </ul>
+      <span class="go">開啟 ↗</span>
+    </a>
+  </div>
+
+  <section class="when">
+    <h2>該用哪一支？</h2>
+    <p>收到法院囑託函、要估本次測量費用：用「囑託測量收費試算」。它的「判決確定分割」只做判決後規費的預估，不計入囑託合計。</p>
+    <p>判決已確定、共有人來申請分割複丈，要算每個人應繳多少：用「共有物分割複丈費清冊」。</p>
+  </section>
+
+  <p class="foot">原始碼：<a href="https://github.com/gn01918004-hub/calculator" target="_blank" rel="noopener">calculator</a>・<a href="https://github.com/gn01918004-hub/courtPartition-" target="_blank" rel="noopener">courtPartition-</a></p>
+</main>
+</body>
+</html>
