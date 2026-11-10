@@ -231,6 +231,7 @@ a.btn { text-decoration: none; }
 .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .stepper input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
 .unit { color: var(--muted); font-size: 13px; }
+.in.prepaid { width: 9.5em; text-align: right; }
 .calc-chip { font-family: var(--font-num); font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 2px 9px; border-radius: 6px; }
 
 /* row lists */
@@ -304,6 +305,8 @@ a.btn { text-decoration: none; }
 .t-top .eyebrow { font-size: 12px; letter-spacing: .18em; color: var(--muted); }
 .t-total { font: 600 clamp(34px, 5vw, 42px)/1.1 var(--font-num); color: var(--seal); margin-top: 6px; font-variant-numeric: tabular-nums; }
 .t-total small { font-size: 16px; color: var(--muted); margin-right: 4px; font-weight: 400; }
+.t-sub { margin-top: 6px; font: 13px/1.5 var(--font-num); color: var(--muted); }
+.t-total.refund { color: var(--ok); }
 .t-upper { font-family: var(--font-display); font-size: 14px; margin-top: 4px; }
 .stamp {
   position: absolute; right: 16px; top: 14px; width: 62px; height: 62px; border: 2.5px solid var(--seal); border-radius: 6px;
@@ -384,6 +387,8 @@ body.has-mbar .undo { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
 .rp-total { display: grid; grid-template-columns: 1fr auto; align-items: center; border: 1.6pt solid #000; padding: 2.5mm 4mm; margin-bottom: 3mm; gap: 1mm 6mm; }
 .rp-total .k { font: 900 13pt var(--font-display); letter-spacing: .1em; }
 .rp-total .v { font: 600 18pt var(--font-num); text-align: right; }
+.rp-bal .k2 { font: 700 10.5pt var(--font-display); }
+.rp-bal .v2 { font: 600 12pt var(--font-num); text-align: right; }
 .rp-total .u { grid-column: 1 / -1; font: 700 11pt var(--font-display); border-top: .5pt solid #000; padding-top: 1.5mm; }
 .rp-notes { font-size: 7.8pt; color: #222; margin: 0 0 3mm; padding-left: 4mm; }
 .rp-notes li { margin-bottom: .6mm; }
@@ -519,7 +524,7 @@ body.has-mbar .undo { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
 
     <!-- 案件資訊 -->
     <section class="sec">
-      <div class="sec-h"><h2>案件資訊</h2><span class="hint">只印在報表上，不影響金額</span></div>
+      <div class="sec-h"><h2>案件資訊</h2><span class="hint">預繳費用會從合計扣除，其餘只印在報表上</span></div>
       <div class="sec-b">
         <div class="grid-3">
           <div class="field"><label for="m_court">囑託機關</label><input class="in" id="m_court" data-bind="meta.court" placeholder="例：臺灣○○地方法院"></div>
@@ -528,6 +533,13 @@ body.has-mbar .undo { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
           <div class="field"><label for="m_land">地段地號／標的</label><input class="in" id="m_land" data-bind="meta.land" placeholder="例：○○段 123、124 地號"></div>
           <div class="field"><label for="m_date">試算日期</label><input class="in" id="m_date" type="date" data-bind="meta.date"></div>
           <div class="field"><label for="m_handler">試算人</label><input class="in" id="m_handler" data-bind="meta.handler"></div>
+        </div>
+        <div class="count-row">
+          <label class="lbl" for="o_prepaid">會勘前預繳費用</label>
+          <input class="in fill prepaid" type="text" id="o_prepaid" inputmode="numeric" data-bind="opt.prepaid" placeholder="0">
+          <span class="unit">元</span>
+          <span class="calc-chip" id="c_prepaid" hidden></span>
+          <span class="note">法院會勘前先預收的費用，試算時從應收合計扣除。</span>
         </div>
         <label class="switch" for="o_urgent">
           <input type="checkbox" id="o_urgent" data-bind="opt.urgent">
@@ -736,9 +748,10 @@ body.has-mbar .undo { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
   <!-- 試算單 -->
   <aside class="ticket" aria-live="polite">
     <div class="t-top">
-      <div class="eyebrow">應收合計</div>
+      <div class="eyebrow" id="totLabel">應收合計</div>
       <div class="t-total"><small>NT$</small><span id="tot">0</span></div>
       <div class="t-upper" id="totUpper">新臺幣零元整</div>
+      <div class="t-sub" id="totSub" hidden></div>
       <div class="stamp" aria-hidden="true">試<br>算</div>
     </div>
     <div class="t-body" id="tbody"></div>
@@ -759,7 +772,7 @@ body.has-mbar .undo { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
   </footer>
 </div>
 <div class="mbar" id="mbar" hidden>
-  <span class="mbar-k">應收合計</span><span class="mbar-v"><small>NT$</small><span id="mTot">0</span></span>
+  <span class="mbar-k" id="mLabel">應收合計</span><span class="mbar-v"><small>NT$</small><span id="mTot">0</span></span>
   <button class="btn small" type="button" id="btnMbar">看明細</button>
 </div>
 <div class="undo" id="undoBar" role="status" hidden><span id="undoMsg"></span><button class="btn small" type="button" id="btnUndo">復原</button><button class="x" type="button" id="btnUndoX" aria-label="關閉">×</button></div>
@@ -807,6 +820,7 @@ body.has-mbar .undo { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
   "多案件：清單切換、全部備份，換電腦也帶得走",
   "開啟時自動檢查新版本，可開啟桌面通知",
   "分割方案數量自訂，填幾案就產生幾張方案卡",
+  "會勘前預繳費用可直接扣除，顯示尚應補繳或應退還",
   "邊填邊算，每一項都列出計算式；數字欄接受全形數字",
   "收費項目按需加入，畫面只留本案用得到的區塊",
   "列印前可預覽：A4 總表、各方案分算明細",
@@ -814,6 +828,25 @@ body.has-mbar .undo { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
   "名詞旁「?」可看定義，右上角「📖 相關規定」查條文"
  ],
  "versions": [
+  {
+   "version": "1.5.0",
+   "date": "2026-11-10",
+   "title": "會勘前預繳費用",
+   "items": [
+    [
+     "新增",
+     "案件資訊新增「會勘前預繳費用」：試算時從應收合計扣除，顯示尚應補繳或應退還的金額與大寫。"
+    ],
+    [
+     "新增",
+     "A4 總表在應收合計下方列出已預繳與尚應補繳（或應退還）；各方案分算明細註記全案預繳金額。"
+    ],
+    [
+     "調整",
+     "有預繳時，試算單大字與手機底部合計列改顯示扣除後的金額。"
+    ]
+   ]
+  },
   {
    "version": "1.4.0",
    "date": "2026-11-09",
@@ -1103,6 +1136,8 @@ function calc(s) {
   const statutory = fieldSub + splitSub;
   const urgentExtra = s.opt.urgent ? statutory : 0;
   const total = statutory + urgentExtra + draw; // 判決確定分割為另案參考，不計入
+  // 會勘前預繳：從應收合計扣除；負數表示應退還
+  const prepaid = Math.round(n(s.opt.prepaid)), balance = total - prepaid;
 
   return {
     bPos, units, uSum, bldPos, bldArea, bldSub: bldPos + bldArea,
@@ -1110,7 +1145,7 @@ function calc(s) {
     fieldSub, sheets, draw,
     pT, plans, planCount, splitBaseOnce, splitSub,
     jT, jLines, jMarkers, jSurvey, jHalved, jGross, jFee, jPointFee, judged,
-    statutory, urgentExtra, total,
+    statutory, urgentExtra, total, prepaid, balance,
   };
 }
 
@@ -1173,7 +1208,7 @@ function blank() {
   return {
     v: 1, id: uid(), updatedAt: Date.now(), sample: false,
     meta: { court: '', docNo: '', caseNo: '', land: '', date: today(), handler: '' },
-    opt: { urgent: false },
+    opt: { urgent: false, prepaid: '' },
     bld: { pos: 0, areas: [] },
     nb: { rows: [], points: 0, areaPoints: 0, plans: 1 },
     draw: { sheets: 0 },
@@ -1337,9 +1372,11 @@ function renderAll() {
 function line(name, expr, amt) {
   return `<div class="t-line${amt ? '' : ' zero'}"><span>${name}</span><span class="money">${fmt(amt)}</span><span class="expr">${expr}</span></div>`;
 }
+const balLabel = c => c.balance >= 0 ? '尚應補繳' : '應退還';
 const judgedExpr = c => `(基本費 ${fmt(c.jT.amount)} ＋ 施測費 ${fmt(c.jSurvey)})${c.jHalved ? ' ÷ 2' : ''}${c.jPointFee ? ` ＋ 界址點 ${c.jMarkers} × 200` : ''}`;
 function warnings(c) {
   const w = [];
+  if (c.prepaid && c.balance < 0) w.push([`預繳 ${fmt(c.prepaid)} 元超過應收合計，應退還 ${fmt(-c.balance)} 元。`, 'info']);
   const bad = [...form.querySelectorAll('input.bad')].filter(el => el.offsetParent);
   if (bad.length) w.push([`有 ${bad.length} 個欄位不是數字（紅框），這些欄位以 0 計算。`, '']);
   if (c.uSum && !c.bPos) w.push(['有建物面積，但建物棟數／閉合區數為 0。第 4 條第 2 款的面積費是「另」計，通常同時要收位置費。', '']);
@@ -1380,8 +1417,16 @@ function update() {
     el.querySelector('[data-po="alloc"]').textContent = fmt(alloc[+el.dataset.plan]?.total || 0);
   });
 
-  $('tot').textContent = fmt(c.total);
-  $('totUpper').textContent = toUpper(c.total);
+  // 有預繳時，大字改顯示扣除後的尚應補繳（或應退還）
+  const shown = c.prepaid ? Math.abs(c.balance) : c.total;
+  $('totLabel').textContent = c.prepaid ? balLabel(c) : '應收合計';
+  $('tot').textContent = fmt(shown);
+  $('tot').parentElement.classList.toggle('refund', c.prepaid > 0 && c.balance < 0);
+  $('totUpper').textContent = toUpper(shown);
+  $('totSub').hidden = !c.prepaid;
+  $('totSub').textContent = `應收合計 ${fmt(c.total)} − 已預繳 ${fmt(c.prepaid)}`;
+  $('c_prepaid').hidden = !c.prepaid;
+  $('c_prepaid').textContent = `${balLabel(c)} ${fmt(Math.abs(c.balance))}`;
   $('sampleBar').hidden = !S.sample;
 
   // 右側只列有金額的項目
@@ -1404,7 +1449,8 @@ function update() {
 
   $('btnPrintPlans').disabled = !alloc.length;
   renderCaseSel();
-  $('mTot').textContent = fmt(c.total);
+  $('mTot').textContent = fmt(c.prepaid ? Math.abs(c.balance) : c.total);
+  $('mLabel').textContent = c.prepaid ? balLabel(c) : '應收合計';
   $('report').innerHTML = printMode === 'plans' ? statementsHTML(c, alloc) : summaryHTML(c);
   save();
 }
@@ -1444,6 +1490,8 @@ function summaryHTML(c) {
     </div>
     <table><thead><tr><th>類別</th><th>項目</th><th>計算式</th><th style="width:24mm">金額（元）</th></tr></thead><tbody>${rows.join('')}</tbody></table>
     <div class="rp-total"><span class="k">應收合計</span><span class="v">NT$ ${fmt(c.total)}</span><span class="u">${toUpper(c.total)}</span></div>
+    ${c.prepaid ? `<div class="rp-total rp-bal"><span class="k2">已預繳（會勘前預收）</span><span class="v2">− ${fmt(c.prepaid)}</span>
+      <span class="k">${balLabel(c)}</span><span class="v">NT$ ${fmt(Math.abs(c.balance))}</span><span class="u">${toUpper(Math.abs(c.balance))}</span></div>` : ''}
     ${plansTable}
     ${c.judged ? `<p class="cap">判決確定後預估（參考，不計入應收合計）</p>
     <table><tbody><tr><td>判決確定分割（${c.jHalved ? '第 6 條半數計收' : '原價計收'}）</td><td class="expr">${judgedExpr(c)}</td><td class="r" style="width:24mm">${fmt(c.judged)}</td></tr></tbody></table>` : ''}
@@ -1483,6 +1531,7 @@ function statementsHTML(c, alloc) {
       <ul class="rp-notes">
         ${notes.map(t => `<li>${t}</li>`).join('')}
         <li>各張分算明細加總 NT$ ${fmt(grand)}，與總表應收合計 NT$ ${fmt(c.total)} 相同。</li>
+        ${c.prepaid ? `<li>全案已預繳 ${fmt(c.prepaid)} 元，於總表扣除：${balLabel(c)} ${fmt(Math.abs(c.balance))} 元。</li>` : ''}
         <li>依據：土地複丈費及建築改良物測量費收費標準第 4 條、第 6 條、附表一、附表二；114 年 11 月 4 日非屬建物收費方式會議紀錄。本表為試算，實際以登記機關核定為準。</li>
       </ul>
     </div>`;
@@ -1675,6 +1724,7 @@ $('btnCopy').addEventListener('click', () => {
     ...c.plans.map(p => `  ${p.name} 施測費 ${fmt(p.subtotal)}`),
     c.urgentExtra ? `限期加倍 ＋${fmt(c.urgentExtra)}` : '',
     `應收合計 ${fmt(c.total)} 元（${toUpper(c.total)}）`,
+    c.prepaid ? `已預繳 ${fmt(c.prepaid)} 元，${balLabel(c)} ${fmt(Math.abs(c.balance))} 元（${toUpper(Math.abs(c.balance))}）` : '',
     c.judged ? `（參考）判決確定後預估 ${fmt(c.judged)} 元，不計入合計` : ''].filter(Boolean).join('\n');
   const done = () => toast('明細已複製');
   try { navigator.clipboard.writeText(L).then(done, () => fallbackCopy(L)); } catch (e) { fallbackCopy(L); }
