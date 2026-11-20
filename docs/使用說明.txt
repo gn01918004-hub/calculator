@@ -2,7 +2,8 @@
 ================================
 
 一、開啟
-  雙擊「囑託測量收費試算_v1.5.0.html」，用 Chrome 或 Edge 開啟。
+  雙擊「survey-fee-calculator.html」，用 Chrome 或 Edge 開啟。
+  最新版下載：https://github.com/gn01918004-hub/calculator/releases/latest/download/survey-fee-calculator.html
   不需安裝，也不需網路（沒有網路時字型會改用電腦內建字型，計算不受影響）。
 
 二、填寫
@@ -47,10 +48,10 @@
 
 五、更新
   開啟計算器時會自動檢查新版本（需連網）。有新版會跳出「有新版本可以下載」：
-    1. 先按「先匯出備份」保存目前的資料。
-    2. 按「下載新版」，在 GitHub 頁面按下載鍵取得新的 .html 檔。
-    3. 用新檔取代舊檔，用同一個瀏覽器開啟，原本的資料會保留。
+    1. 先按「先下載備份」保存全部案件。
+    2. 按「下載新版」，會直接下載最新的 survey-fee-calculator.html。
+    3. 用新檔取代舊檔（檔名相同，直接覆蓋），用同一個瀏覽器開啟，原本的資料會保留。
   暫時不想更新可按「稍後再說」；按「略過這個版本」則這一版不再提醒。
   右上角「v版本・更新內容」可看版本時間軸，也可以按「檢查更新」手動檢查。
-  最新版本在 GitHub：https://github.com/gn01918004-hub/calculator
+  各版本說明：https://github.com/gn01918004-hub/calculator/releases
   畫面最下方與報表右上角都會顯示目前使用的版本。

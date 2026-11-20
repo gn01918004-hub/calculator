@@ -1,20 +1,16 @@
 {
-  "version": "1.5.0",
-  "date": "2026-11-10",
-  "title": "會勘前預繳費用",
+  "version": "1.5.1",
+  "date": "2026-11-20",
+  "title": "改用 GitHub Releases 發布",
   "items": [
     [
-      "新增",
-      "案件資訊新增「會勘前預繳費用」：試算時從應收合計扣除，顯示尚應補繳或應退還的金額與大寫。"
-    ],
-    [
-      "新增",
-      "A4 總表在應收合計下方列出已預繳與尚應補繳（或應退還）；各方案分算明細註記全案預繳金額。"
+      "調整",
+      "新版改由 GitHub Releases 發布，附件檔名固定為 survey-fee-calculator.html。"
     ],
     [
       "調整",
-      "有預繳時，試算單大字與手機底部合計列改顯示扣除後的金額。"
+      "更新通知的「下載新版」直接下載最新版檔案，不必再到 GitHub 頁面找下載鍵。"
     ]
   ],
-  "download": "https://github.com/gn01918004-hub/calculator/blob/HEAD/dist/%E5%9B%91%E8%A8%97%E6%B8%AC%E9%87%8F%E6%94%B6%E8%B2%BB%E8%A9%A6%E7%AE%97_v1.5.0.html"
+  "download": "https://github.com/gn01918004-hub/calculator/releases/latest/download/survey-fee-calculator.html"
 }

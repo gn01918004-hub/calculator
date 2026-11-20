@@ -1,6 +1,6 @@
 # 囑託測量收費試算
 
-目前版本 **v1.5.0**，更新內容見 [CHANGELOG.md](CHANGELOG.md)。
+目前版本 **v1.5.1**，更新內容見 [CHANGELOG.md](CHANGELOG.md)。
 
 法院或行政執行分署囑託之現況測量、非屬建物位置面積測量、共有物分割方案的收費試算工具。取代 `docs/原始試算表_v2.1.xlsx`。
 
@@ -50,9 +50,10 @@
 
 ## 散佈給同事
 
-- **可散佈檔案**在 `dist/`：
-  - `囑託測量收費試算_v1.5.0.html`：單一檔案，直接傳給同事即可。
-  - `囑託測量收費試算_v1.5.0.zip`：計算器＋使用說明＋規定檢查報告。
+- **下載最新版**（永遠是最新的 Release）：
+  https://github.com/gn01918004-hub/calculator/releases/latest/download/survey-fee-calculator.html
+  把這個連結給同事即可。檔名固定為 `survey-fee-calculator.html`，版本號只寫在 Release 標題和程式內（右上角、頁尾、報表）。
+- 各版本與更新說明：https://github.com/gn01918004-hub/calculator/releases
 - 或開啟 GitHub Pages，同事用網址開啟，永遠是最新版：
   1. 到 https://github.com/gn01918004-hub/calculator/settings/pages
   2. Source 選「Deploy from a branch」，Branch 選 `claude/brave-shannon-c3h5d0`、資料夾 `/ (root)`，按 Save。
@@ -61,9 +62,13 @@
 
 ## 發布新版（同事會自動收到通知）
 
-1. 在 `index.html` 最下方 `<script id="changelogData">` 的 `versions` **最前面**加一筆：`version`（三段式，例如 `1.3.1`）、`date`、`title`（本版重點）、`items`（`["新增"／"調整", "說明"]`）。
+1. 在 `index.html` 最下方 `<script id="changelogData">` 的 `versions` **最前面**加一筆：`version`（三段式，例如 `1.5.2`）、`date`、`title`（本版重點）、`items`（`["新增"／"調整", "說明"]`）。
 2. 同步更新 `CHANGELOG.md`。
-3. 執行 `./scripts/build.sh`：重新產生 `dist/` 與 `version.json`。
-4. commit 並 push。push 後，同事開啟舊版計算器時就會跳出「有新版本可以下載」。
+3. 執行 `./scripts/build.sh`：更新 `version.json`（`dist/` 不進 git，只是本機預覽）。
+4. commit 並 push 到預設分支。GitHub Actions（`.github/workflows/release.yml`）會自動：
+   - 建立 Release，tag 為 `v版本號`，標題「囑託測量收費試算 v版本號」，說明取自本版更新項目；
+   - 附上 `survey-fee-calculator.html`，並設為 latest。
+   同一版本號已發布過就略過，所以只改文件、不改版本號時不會重複發布。
+5. 同事開啟舊版計算器時會跳出「有新版本可以下載」，「下載新版」直接下載上面那個固定連結。
 
-自動更新讀的是 `https://raw.githubusercontent.com/gn01918004-hub/calculator/HEAD/version.json`，所以倉庫要維持公開。
+自動更新讀的是 `https://raw.githubusercontent.com/gn01918004-hub/calculator/HEAD/version.json`，所以倉庫要維持公開。GitHub 對這個檔案最多快取 5 分鐘，Release 通常在這段時間內就已建好，同事不會下載到舊檔。
